@@ -71,7 +71,7 @@
       return `<li class="nav-item"><a class="nav-link${active ? ' active' : ''}" href="${href}"${active ? ' aria-current="page"' : ''}>${label}</a></li>`;
     }).join('');
     return `
-      <a class="visually-hidden-focusable position-absolute p-2 bg-body" href="#main">Skip to main content</a>
+      <a class="visually-hidden-focusable position-absolute z-3 p-2 bg-body" href="#main">Skip to main content</a>
       <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom" aria-label="Main navigation">
         <div class="container">
           <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="index.html">

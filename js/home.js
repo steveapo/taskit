@@ -64,7 +64,7 @@
       data = FALLBACK;
     }
     box.innerHTML = `<figure class="mb-0">
-        <blockquote class="blockquote mb-1"><p class="mb-0">${esc(data.quote)}</p></blockquote>
+        <blockquote class="blockquote"><p class="mb-0">${esc(data.quote)}</p></blockquote>
         <figcaption class="blockquote-footer mb-0">${esc(data.author)}</figcaption>
       </figure>`;
     button.disabled = false;
