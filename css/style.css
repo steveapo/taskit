@@ -1,0 +1,65 @@
+/*
+ * style.css — Taskit's thin theme layer on top of Bootstrap 5.3.
+ * Bootstrap handles layout and the light/dark colour modes. This file only adds the
+ * brand colour and the widgets Bootstrap doesn't ship (CSS charts, Kanban, testimonials).
+ */
+:root {
+  --taskit-brand: #6f42c1;
+  --taskit-brand-dark: #59359a;
+  --taskit-brand-text: #6f42c1;
+}
+/* The brand purple is too dark to read on a dark background, so text uses a lighter tint there. */
+[data-bs-theme="dark"] { --taskit-brand-text: #b197fc; }
+
+.text-brand { color: var(--taskit-brand-text) !important; }
+
+/* Brand button: sets Bootstrap's own button variables so hover/focus/disabled states keep working. */
+.btn-brand {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--taskit-brand);
+  --bs-btn-border-color: var(--taskit-brand);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--taskit-brand-dark);
+  --bs-btn-hover-border-color: var(--taskit-brand-dark);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--taskit-brand-dark);
+  --bs-btn-active-border-color: var(--taskit-brand-dark);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--taskit-brand);
+  --bs-btn-disabled-border-color: var(--taskit-brand);
+  --bs-btn-focus-shadow-rgb: 111, 66, 193;
+}
+
+.hero { background: linear-gradient(135deg, rgba(111, 66, 193, .14), rgba(13, 202, 240, .10)); }
+
+.agent-avatar {
+  width: 3rem; height: 3rem; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: 1.4rem;
+}
+
+/* Bar chart: bar heights are set inline from JS as a % of the tallest bar. */
+.bar-chart, .bar-labels { display: flex; justify-content: center; gap: 2.5rem; }
+.bar-chart { align-items: flex-end; height: 200px; border-bottom: 1px solid var(--bs-border-color); }
+.bar-chart .bar { width: 4.5rem; min-height: 2px; border-radius: .375rem .375rem 0 0; transition: height .3s ease; }
+.bar-labels span { width: 4.5rem; text-align: center; }
+
+/* Pie chart: JS sets a conic-gradient background. The grey is the empty state. */
+.pie-chart { width: 180px; aspect-ratio: 1; border-radius: 50%; background: var(--bs-secondary-bg); }
+
+/* Kanban board */
+.kanban-col { min-height: 260px; }
+.kanban-col.drag-over { outline: 2px dashed var(--taskit-brand-text); outline-offset: -6px; }
+.kanban-card { cursor: grab; }
+.kanban-card.dragging { opacity: .5; }
+.priority-high { border-left: 4px solid var(--bs-danger) !important; }
+.priority-medium { border-left: 4px solid var(--bs-warning) !important; }
+.priority-low { border-left: 4px solid var(--bs-success) !important; }
+
+/* Testimonials sit on a fixed brand gradient so Bootstrap's white carousel controls stay visible in both themes. */
+.testimonial-carousel { background: linear-gradient(135deg, #6f42c1, #3d2a8c); color: #fff; border-radius: 1rem; }
+.testimonial-carousel .carousel-item { padding: 3rem 4.5rem 3.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-chart .bar { transition: none; }
+}
