@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Taskit tests</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem; }
+    .pass { color: #198754; } .fail { color: #dc3545; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Taskit tests</h1>
+  <p>Unlinked from the site. Every check runs against a fake in-memory storage, so your real tasks are never touched.</p>
+  <ol id="results"></ol>
+
+  <script src="../js/store.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const store = Taskit.store;
+    const tests = [];
+    const test = (name, fn) => tests.push([name, fn]);
+
+    /* ---------- tiny assertion helpers ---------- */
+    function eq(actual, expected, msg) {
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(`${msg ? msg + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+      }
+    }
+    function ok(value, msg) { if (!value) throw new Error(msg || 'expected a truthy value'); }
+    function throws(fn) {
+      try { fn(); } catch (e) { return; }
+      throw new Error('expected an error to be thrown');
+    }
+    function fakeStorage(initial) {
+      const map = new Map(Object.entries(initial || {}));
+      return { getItem: k => (map.has(k) ? map.get(k) : null), setItem: (k, v) => map.set(k, String(v)), _map: map };
+    }
+    // Empty (not missing) data, so the store does not seed sample tasks.
+    function fresh() {
+      const s = fakeStorage({ 'taskit.tasks': '[]', 'taskit.activity': '[]' });
+      store._useStorage(s);
+      return s;
+    }
+    const base = { name: 'Write report', description: 'Quarterly', dueDate: '2026-11-01', priority: 'high', agentId: 'hermes' };
+    const ids = list => list.map(t => t.id);
+
+    /* ---------- store: CRUD + activity ---------- */
+    test('addTask trims fields, starts as todo and logs "added"', () => {
+      fresh();
+      const t = store.addTask({ ...base, name: '  Write report  ' });
+      eq(t.name, 'Write report');
+      eq(t.status, 'todo');
+      eq(store.getTasks().length, 1);
+      const log = store.getActivity();
+      eq([log[0].type, log[0].taskName, log[0].agentId], ['added', 'Write report', 'hermes']);
+    });
+
+    test('addTask rejects whitespace-only name or description and bad dates', () => {
+      fresh();
+      throws(() => store.addTask({ ...base, name: '   ' }));
+      throws(() => store.addTask({ ...base, description: '\n\t ' }));
+      throws(() => store.addTask({ ...base, dueDate: 'tomorrow' }));
+      eq(store.getTasks().length, 0);
+    });
+
+    test('addTask falls back to medium priority and the first agent for unknown values', () => {
+      fresh();
+      const t = store.addTask({ ...base, priority: 'urgent', agentId: 'zeus' });
+      eq([t.priority, t.agentId], ['medium', 'athena']);
+    });
+
+    test('updateTask changes fields, keeps status, logs "edited"', () => {
+      fresh();
+      const t = store.addTask(base);
+      const u = store.updateTask(t.id, { ...base, name: 'Final report', priority: 'low' });
+      eq([u.name, u.priority, u.status], ['Final report', 'low', 'todo']);
+      eq(store.getActivity()[0].type, 'edited');
+      eq(store.updateTask('missing', base), null);
+    });
+
+    test('deleteTask removes the task and logs its name', () => {
+      fresh();
+      const t = store.addTask(base);
+      ok(store.deleteTask(t.id));
+      eq(store.getTasks().length, 0);
+      eq([store.getActivity()[0].type, store.getActivity()[0].taskName], ['deleted', 'Write report']);
+      eq(store.deleteTask(t.id), false);
+    });
+
+    test('setStatus updates status, logs the given type, ignores no-op moves and bad statuses', () => {
+      fresh();
+      const t = store.addTask(base);
+      store.setStatus(t.id, 'done', 'completed');
+      eq(store.getTask(t.id).status, 'done');
+      eq(store.getActivity()[0].type, 'completed');
+      const before = store.getActivity().length;
+      store.setStatus(t.id, 'done');
+      eq(store.getActivity().length, before, 'no-op move should not log');
+      eq(store.setStatus(t.id, 'archived'), null, 'unknown status rejected');
+      eq(store.getTask(t.id).status, 'done');
+    });
+
+    test('activity log keeps only the 50 newest entries, newest first', () => {
+      fresh();
+      for (let i = 0; i < 60; i++) store.addTask({ ...base, name: 'Task ' + i });
+      const log = store.getActivity();
+      eq([log.length, log[0].taskName, log[49].taskName], [50, 'Task 59', 'Task 10']);
+    });
+
+    test('counts: pending is todo + in-progress; priorities counted', () => {
+      fresh();
+      const a = store.addTask({ ...base, priority: 'high' });
+      const b = store.addTask({ ...base, priority: 'low' });
+      store.addTask({ ...base, priority: 'low' });
+      store.setStatus(a.id, 'in-progress');
+      store.setStatus(b.id, 'done');
+      const c = store.counts();
+      eq([c.total, c.pending, c.done, c.high, c.medium, c.low], [3, 2, 1, 1, 0, 2]);
+    });
+
+    test('getTasks returns copies, so callers cannot change stored data', () => {
+      fresh();
+      store.addTask(base);
+      store.getTasks()[0].name = 'hacked';
+      eq(store.getTasks()[0].name, 'Write report');
+    });
+
+    test('data is saved and survives a reload', () => {
+      const s = fresh();
+      store.addTask(base);
+      store._useStorage(s);
+      eq([store.getTasks().length, store.persistent], [1, true]);
+    });
+
+    test('mutations fire a taskit:change event', () => {
+      fresh();
+      let fired = 0;
+      const on = () => fired++;
+      document.addEventListener('taskit:change', on);
+      const t = store.addTask(base);
+      store.setStatus(t.id, 'done');
+      store.deleteTask(t.id);
+      document.removeEventListener('taskit:change', on);
+      eq(fired, 3);
+    });
+
+    /* ---------- store: storage edge cases ---------- */
+    test('first visit seeds 6 sample tasks plus activity and saves them', () => {
+      const s = fakeStorage();
+      store._useStorage(s);
+      eq([store.persistent, store.getTasks().length], [true, 6]);
+      ok(store.getActivity().length > 0, 'seed activity expected');
+      ok(s._map.has('taskit.tasks'), 'seed should be saved');
+    });
+
+    test('corrupt saved JSON falls back to seed data in memory', () => {
+      store._useStorage(fakeStorage({ 'taskit.tasks': '{not json' }));
+      eq([store.persistent, store.getTasks().length], [false, 6]);
+    });
+
+    test('blocked storage falls back to seed data and keeps working', () => {
+      const blocked = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+      store._useStorage(blocked);
+      eq([store.persistent, store.getTasks().length], [false, 6]);
+      store.addTask(base);
+      eq(store.getTasks().length, 7);
+    });
+
+    /* ---------- applyView (pure) ---------- */
+    const sample = [
+      { id: '1', name: 'banana report', description: 'Fruit stats', dueDate: '2026-11-03', priority: 'low', status: 'done', agentId: 'pythagoras' },
+      { id: '2', name: 'Apple launch', description: 'Write the BANANA-free copy', dueDate: '2026-11-01', priority: 'high', status: 'todo', agentId: 'hermes' },
+      { id: '3', name: 'Cherry bug', description: 'Fix login', dueDate: '2026-11-02', priority: 'high', status: 'in-progress', agentId: 'hephaestus' },
+    ];
+
+    test('applyView search matches name or description, ignoring case and spaces', () => {
+      eq(ids(store.applyView(sample, { search: '  BaNaNa ' })), ['1', '2']);
+      eq(ids(store.applyView(sample, { search: 'login' })), ['3']);
+      eq(store.applyView(sample, { search: 'zzz' }).length, 0);
+    });
+
+    test('applyView status filter: pending = todo + in-progress', () => {
+      eq(ids(store.applyView(sample, { status: 'pending' })), ['2', '3']);
+      eq(ids(store.applyView(sample, { status: 'completed' })), ['1']);
+      eq(ids(store.applyView(sample, { status: 'all' })), ['1', '2', '3']);
+    });
+
+    test('applyView filters by priority and agent together', () => {
+      eq(ids(store.applyView(sample, { priority: 'high' })), ['2', '3']);
+      eq(ids(store.applyView(sample, { priority: 'high', agentId: 'hermes' })), ['2']);
+      eq(ids(store.applyView(sample, { priority: 'all', agentId: 'all' })), ['1', '2', '3']);
+    });
+
+    test('applyView sorts by due date both ways and by name ignoring case, without touching the input', () => {
+      eq(ids(store.applyView(sample, { sort: 'due-asc' })), ['2', '3', '1']);
+      eq(ids(store.applyView(sample, { sort: 'due-desc' })), ['1', '3', '2']);
+      eq(ids(store.applyView(sample, { sort: 'name' })), ['2', '1', '3']);
+      eq(ids(sample), ['1', '2', '3'], 'input array must not be reordered');
+    });
+
+    test('escapeHtml neutralises markup', () => {
+      eq(store.escapeHtml('<img src=x onerror="alert(1)">&\''), '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;&amp;&#39;');
+    });
+
+    /* ---------- runner ---------- */
+    (async function run() {
+      const list = document.getElementById('results');
+      let passed = 0;
+      for (const [name, fn] of tests) {
+        const li = document.createElement('li');
+        try {
+          await fn();
+          passed++;
+          li.className = 'pass';
+          li.textContent = 'PASS ' + name;
+        } catch (err) {
+          li.className = 'fail';
+          li.textContent = 'FAIL ' + name + ': ' + err.message;
+        }
+        list.append(li);
+      }
+      document.title = (passed === tests.length ? 'PASS ' : 'FAIL ') + passed + '/' + tests.length;
+    })();
+  })();
+  </script>
+</body>
+</html>
