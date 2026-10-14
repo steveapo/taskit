@@ -142,6 +142,17 @@
 
   /* ---------- start ---------- */
 
+  /* ---------- toolbar: each control updates one key of `view`, then re-renders ---------- */
+
+  const CONTROLS = { search: 'search', status: 'filter-status', priority: 'filter-priority', agentId: 'filter-agent', sort: 'sort' };
+  Object.entries(CONTROLS).forEach(([key, id]) => {
+    // 'input' fires on every keystroke in the search box and on every change in the selects.
+    $(id).addEventListener('input', e => {
+      view[key] = e.target.value;
+      render();
+    });
+  });
+
   fillAgentSelects();
   document.addEventListener('taskit:change', render);
   render();
