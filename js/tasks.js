@@ -7,7 +7,7 @@
 (function (Taskit) {
   'use strict';
 
-  const { store, layout } = Taskit;
+  const { store, layout, sim } = Taskit;
   const esc = store.escapeHtml;
   const $ = id => document.getElementById(id);
 
@@ -53,6 +53,7 @@
         <td><span class="badge ${PRIORITY_BADGE[t.priority] || ''} text-capitalize">${esc(t.priority)}</span></td>
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td class="text-nowrap text-end">
+          ${actionButton('run', id, 'bi-play-fill', 'btn-outline-primary', `Run agent on ${name}`, t.status !== 'todo')}
           ${actionButton('complete', id, 'bi-check-lg', 'btn-outline-success', `Mark ${name} as completed`, done)}
           ${actionButton('edit', id, 'bi-pencil', 'btn-outline-secondary', `Edit ${name}`, false)}
           ${actionButton('delete', id, 'bi-trash', 'btn-outline-danger', `Delete ${name}`, false)}
@@ -125,6 +126,7 @@
   /* ---------- row actions (one delegated listener for the whole table) ---------- */
 
   const actions = {
+    run: id => sim.run(id),
     complete: id => store.setStatus(id, 'done', 'completed'),
     edit: id => startEdit(id),
     delete: id => {

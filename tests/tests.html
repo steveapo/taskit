@@ -14,6 +14,7 @@
   <ol id="results"></ol>
 
   <script src="../js/store.js"></script>
+  <script src="../js/agent-sim.js"></script>
   <script>
   (function () {
     'use strict';
@@ -201,6 +202,44 @@
 
     test('escapeHtml neutralises markup', () => {
       eq(store.escapeHtml('<img src=x onerror="alert(1)">&\''), '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;&amp;&#39;');
+    });
+
+    /* ---------- agent simulation ---------- */
+    test('sim.run walks a task todo → in-progress → done and logs both steps', async () => {
+      fresh();
+      const t = store.addTask(base);
+      const running = Taskit.sim.run(t.id, 20);
+      eq(store.getTask(t.id).status, 'in-progress');
+      eq(await running, true);
+      eq(store.getTask(t.id).status, 'done');
+      eq(store.getActivity().slice(0, 2).map(a => a.type), ['completed', 'started']);
+    });
+
+    test('sim.run abandons quietly if the task is deleted mid-run', async () => {
+      fresh();
+      const t = store.addTask(base);
+      const running = Taskit.sim.run(t.id, 20);
+      store.deleteTask(t.id);
+      eq(await running, false);
+      eq(store.getTasks().length, 0, 'task must not come back');
+      eq(store.getActivity()[0].type, 'deleted');
+    });
+
+    test('sim.run abandons if the user moves the task mid-run', async () => {
+      fresh();
+      const t = store.addTask(base);
+      const running = Taskit.sim.run(t.id, 20);
+      store.setStatus(t.id, 'todo');
+      eq(await running, false);
+      eq(store.getTask(t.id).status, 'todo');
+    });
+
+    test('sim.run refuses tasks that are not in To do', async () => {
+      fresh();
+      const t = store.addTask(base);
+      store.setStatus(t.id, 'done');
+      eq(await Taskit.sim.run(t.id, 20), false);
+      eq(await Taskit.sim.run('missing', 20), false);
     });
 
     /* ---------- runner ---------- */
