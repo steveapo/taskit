@@ -9,7 +9,7 @@
 
   const { store } = Taskit;
   const esc = store.escapeHtml;
-  const COLUMNS = [['todo', 'To do'], ['in-progress', 'In progress'], ['done', 'Done']];
+  const COLUMNS = [['todo', 'To do'], ['in-progress', 'In progress'], ['done', 'Completed']];
   const PRIORITIES = [['high', 'High', 'var(--bs-danger)'], ['medium', 'Medium', 'var(--bs-warning)'], ['low', 'Low', 'var(--bs-success)']];
   const board = document.getElementById('board');
 
@@ -55,7 +55,7 @@
     return `<article class="card kanban-card priority-${esc(t.priority)} shadow-sm" draggable="true" data-id="${id}">
         <div class="card-body p-2">
           <h4 class="h6 mb-1">${esc(t.name)}</h4>
-          <p class="small text-body-secondary mb-2">${esc(agent ? agent.name : 'Unassigned')} · due ${esc(t.dueDate)}</p>
+          <p class="small text-body-secondary mb-2">${esc(agent ? agent.name : 'Unassigned')} · due ${esc(t.dueDate)} · <span class="text-capitalize">${esc(t.priority)}</span> priority</p>
           <label class="visually-hidden" for="move-${id}">Move “${esc(t.name)}” to</label>
           <select class="form-select form-select-sm" id="move-${id}" data-move="${id}">${options}</select>
         </div>
