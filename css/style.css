@@ -709,6 +709,7 @@ b, strong { font-weight: 500; }
   display: inline-flex;
   align-items: center;
   gap: .375rem;
+  max-width: 100%; /* never wider than its row: a long agent name shrinks instead (see below) */
   height: 2rem;
   padding: 0 .75rem;
   font-size: .8125rem;
@@ -735,7 +736,14 @@ b, strong { font-weight: 500; }
 }
 /* Room on the right for the chevron, which is pulled back over that space.
    pointer-events: none lets a click on the chevron reach the select underneath. */
-.pill-select { padding-right: 1.25rem; }
+/* When the pill is squeezed, the select (min-width: 0 above) shrinks and cuts its text
+   with "…" instead of pushing out of the composer. */
+.pill-select {
+  padding-right: 1.25rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .pill-chevron { margin-left: -1.375rem; color: var(--tk-muted); pointer-events: none; }
 /* Some systems draw the open option list in the select's own colours: give it solid ones. */
 .pill-select option { background-color: var(--tk-bg); color: var(--tk-text); }
@@ -813,6 +821,8 @@ b, strong { font-weight: 500; }
 /* Bootstrap only shows an .invalid-feedback placed right after its field. Ours sit under the
    composer, so :has() asks the form whether that field is invalid instead. */
 .composer-errors .invalid-feedback { margin: .375rem 0 0; }
+/* :has() works in every current browser (Chrome 105+, Safari 15.4+, Firefox 121+). In an older
+   one the messages just don't appear; invalid fields still block the submit (validateForm). */
 .was-validated:has(#task-name:invalid) .error-name,
 .was-validated:has(#task-description:invalid) .error-detail,
 .was-validated:has(#task-due:invalid) .error-due { display: block; }

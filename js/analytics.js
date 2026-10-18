@@ -18,6 +18,12 @@
   const shortDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
   const board = $('board');
 
+  // "20 Oct", or the saved text as it is if it isn't a real date (format() would throw).
+  function dueText(iso) {
+    const date = new Date(iso + 'T00:00');
+    return isNaN(date) ? esc(iso) : shortDate.format(date);
+  }
+
   // Whole-number share of the total, e.g. 2 of 6 → 33. Zero when there are no tasks.
   const percent = (n, total) => (total ? Math.round((n / total) * 100) : 0);
 
@@ -91,7 +97,7 @@
         <h4 class="board-card-title">${working}<span>${esc(t.name)}</span></h4>
         <p class="board-card-meta">
           <span>${esc(agent ? agent.name : 'Unassigned')}</span>
-          <span><span class="visually-hidden">due </span><time class="mono" datetime="${esc(t.dueDate)}">${shortDate.format(new Date(t.dueDate + 'T00:00'))}</time></span>
+          <span><span class="visually-hidden">due </span><time class="mono" datetime="${esc(t.dueDate)}">${dueText(t.dueDate)}</time></span>
           <span><span class="prio"><span class="prio-dot is-${key}" aria-hidden="true"></span>${PRIORITY_WORD[key]}<span class="visually-hidden"> priority</span></span></span>
         </p>
         ${moveSelectHtml(t, id)}
