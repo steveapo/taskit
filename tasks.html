@@ -18,115 +18,127 @@
   <header id="site-header"></header>
 
   <main id="main" class="flex-grow-1">
-    <div class="container py-4">
-      <h1 class="h2 mb-4">Your tasks</h1>
+    <div class="container pt-5 pb-4">
+      <!-- Page heading in two tones, then the three counts (filled in by js/tasks.js) -->
+      <h1 class="lede mb-4 pt-lg-4">
+        <span>Your tasks.</span>
+        <span class="lede-muted">Hand one to an agent and keep track of the rest.</span>
+      </h1>
+      <dl class="stat-strip" aria-label="Task summary">
+        <div class="stat"><dt class="label">Total</dt><dd id="count-total" class="stat-value mono">0</dd></div>
+        <div class="stat"><dt class="label">Pending</dt><dd id="count-pending" class="stat-value mono">0</dd></div>
+        <div class="stat"><dt class="label">Completed</dt><dd id="count-done" class="stat-value mono">0</dd></div>
+      </dl>
 
-      <!-- Summary: filled in by js/tasks.js -->
-      <section class="row g-3 mb-4" aria-label="Task summary">
-        <div class="col-4"><div class="card text-center h-100"><div class="card-body py-3">
-          <div class="fs-2 fw-bold" id="count-total">0</div><div class="small text-body-secondary">Total</div>
-        </div></div></div>
-        <div class="col-4"><div class="card text-center h-100"><div class="card-body py-3">
-          <div class="fs-2 fw-bold text-warning-emphasis" id="count-pending">0</div><div class="small text-body-secondary">Pending</div>
-        </div></div></div>
-        <div class="col-4"><div class="card text-center h-100"><div class="card-body py-3">
-          <div class="fs-2 fw-bold text-success-emphasis" id="count-done">0</div><div class="small text-body-secondary">Completed</div>
-        </div></div></div>
-      </section>
+      <!-- Composer: the add / edit form (the same form is reused for editing) -->
+      <section class="mt-5" aria-labelledby="form-heading">
+        <div class="d-flex justify-content-between align-items-baseline gap-3 mb-2">
+          <h2 id="form-heading" class="label mb-0">Add a task</h2>
+          <!-- Phones have no keyboard, so the shortcut hint only shows from 768px. -->
+          <p class="small text-body-secondary mb-0 d-none d-md-block">Press <kbd class="kbd">N</kbd> to start a new task</p>
+        </div>
+        <form id="task-form" novalidate>
+          <input type="hidden" id="task-id">
+          <div class="composer">
+            <label for="task-name" class="visually-hidden">Task name</label>
+            <input type="text" id="task-name" class="composer-name" placeholder="What should an agent do?"
+                   required maxlength="80" autocomplete="off" aria-describedby="name-error">
+            <label for="task-description" class="visually-hidden">Description</label>
+            <textarea id="task-description" class="composer-detail" rows="2" placeholder="Add the details…"
+                      required maxlength="300" aria-describedby="detail-error"></textarea>
 
-      <!-- Add / edit form (the same form is reused for editing) -->
-      <section class="card mb-4 shadow-sm" aria-labelledby="form-heading">
-        <div class="card-body">
-          <h2 id="form-heading" class="h5 mb-3">Add a task</h2>
-          <form id="task-form" novalidate>
-            <input type="hidden" id="task-id">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label for="task-name" class="form-label">Task name</label>
-                <input type="text" id="task-name" class="form-control" required maxlength="80" autocomplete="off">
-                <div class="invalid-feedback">Give the task a name.</div>
+            <!-- Bottom bar: compact pill controls on the left, the send button on the right -->
+            <div class="composer-bar">
+              <div class="pill">
+                <label for="task-due" class="pill-prefix"><span data-icon="calendar-days"></span><span class="visually-hidden">Due date</span></label>
+                <input type="date" id="task-due" class="pill-date" required aria-describedby="due-error">
               </div>
-              <div class="col-6 col-md-3">
-                <label for="task-due" class="form-label">Due date</label>
-                <input type="date" id="task-due" class="form-control" required>
-                <div class="invalid-feedback">Pick a due date.</div>
-              </div>
-              <div class="col-6 col-md-3">
-                <label for="task-priority" class="form-label">Priority</label>
-                <select id="task-priority" class="form-select">
+              <div class="pill">
+                <label for="task-priority" class="pill-prefix">Priority</label>
+                <select id="task-priority" class="pill-select">
                   <option value="high">High</option>
                   <option value="medium" selected>Medium</option>
                   <option value="low">Low</option>
                 </select>
+                <span data-icon="chevron-down" class="pill-chevron"></span>
               </div>
-              <div class="col-md-9">
-                <label for="task-description" class="form-label">Description</label>
-                <textarea id="task-description" class="form-control" rows="2" required maxlength="300"></textarea>
-                <div class="invalid-feedback">Describe what the agent should do.</div>
+              <div class="pill">
+                <label for="task-agent" class="pill-prefix">Agent</label>
+                <select id="task-agent" class="pill-select"></select>
+                <span data-icon="chevron-down" class="pill-chevron"></span>
               </div>
-              <div class="col-md-3">
-                <label for="task-agent" class="form-label">Agent</label>
-                <select id="task-agent" class="form-select"></select>
+              <div class="composer-actions">
+                <button type="button" id="task-cancel" class="btn btn-sm btn-pill-ghost d-none">Cancel</button>
+                <button type="submit" id="task-submit" class="btn btn-primary composer-send" aria-label="Add task" title="Add task">
+                  <span data-icon="arrow-up"></span>
+                </button>
               </div>
             </div>
-            <div class="d-flex gap-2 mt-3">
-              <button type="submit" id="task-submit" class="btn btn-brand">Add task</button>
-              <button type="button" id="task-cancel" class="btn btn-outline-secondary d-none">Cancel</button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <!-- Error messages sit under the composer. style.css shows each one only while its field is invalid. -->
+          <div class="composer-errors">
+            <p id="name-error" class="invalid-feedback error-name">Give the task a name.</p>
+            <p id="detail-error" class="invalid-feedback error-detail">Describe what the agent should do.</p>
+            <p id="due-error" class="invalid-feedback error-due">Pick a due date.</p>
+          </div>
+        </form>
       </section>
 
-      <!-- Toolbar: live search, filters and sorting -->
-      <section aria-labelledby="list-heading">
+      <!-- Toolbar (live search, filters, sort), then the task table -->
+      <section class="mt-5" aria-labelledby="list-heading">
         <h2 id="list-heading" class="visually-hidden">Task list</h2>
-        <div class="row g-2 mb-3" role="search">
-          <div class="col-12 col-lg-4">
+        <div class="toolbar" role="search">
+          <div class="pill search-field">
+            <span data-icon="magnifying-glass"></span>
             <label for="search" class="visually-hidden">Search tasks</label>
-            <input type="search" id="search" class="form-control" placeholder="Search by name or description…">
+            <input type="search" id="search" class="search-input" placeholder="Search tasks" autocomplete="off">
+            <kbd class="kbd" aria-hidden="true">/</kbd>
           </div>
-          <div class="col-6 col-lg-2">
-            <label for="filter-status" class="visually-hidden">Filter by status</label>
-            <select id="filter-status" class="form-select">
-              <option value="all">All statuses</option>
+          <div class="pill">
+            <label for="filter-status" class="pill-prefix">Status</label>
+            <select id="filter-status" class="pill-select">
+              <option value="all">All</option>
               <option value="pending">Pending</option>
               <option value="completed">Completed</option>
             </select>
+            <span data-icon="chevron-down" class="pill-chevron"></span>
           </div>
-          <div class="col-6 col-lg-2">
-            <label for="filter-priority" class="visually-hidden">Filter by priority</label>
-            <select id="filter-priority" class="form-select">
-              <option value="all">All priorities</option>
+          <div class="pill">
+            <label for="filter-priority" class="pill-prefix">Priority</label>
+            <select id="filter-priority" class="pill-select">
+              <option value="all">All</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
+            <span data-icon="chevron-down" class="pill-chevron"></span>
           </div>
-          <div class="col-6 col-lg-2">
-            <label for="filter-agent" class="visually-hidden">Filter by agent</label>
-            <select id="filter-agent" class="form-select">
-              <option value="all">All agents</option>
+          <div class="pill">
+            <label for="filter-agent" class="pill-prefix">Agent</label>
+            <select id="filter-agent" class="pill-select">
+              <option value="all">All</option>
             </select>
+            <span data-icon="chevron-down" class="pill-chevron"></span>
           </div>
-          <div class="col-6 col-lg-2">
-            <label for="sort" class="visually-hidden">Sort tasks</label>
-            <select id="sort" class="form-select">
-              <option value="due-asc">Due date (soonest)</option>
-              <option value="due-desc">Due date (latest)</option>
-              <option value="name">Name (A–Z)</option>
+          <div class="pill">
+            <label for="sort" class="pill-prefix">Sort</label>
+            <select id="sort" class="pill-select">
+              <option value="due-asc">Due, soonest</option>
+              <option value="due-desc">Due, latest</option>
+              <option value="name">Name, A–Z</option>
             </select>
+            <span data-icon="chevron-down" class="pill-chevron"></span>
           </div>
         </div>
 
         <div class="table-responsive">
-          <table class="table align-middle">
-            <caption id="table-caption" class="small"></caption>
+          <table class="table table-hover task-table align-middle mb-0">
+            <caption id="table-caption"></caption>
             <thead>
               <tr>
                 <th scope="col">Task</th>
-                <th scope="col">Description</th>
                 <th scope="col">Agent</th>
-                <th scope="col">Due date</th>
+                <th scope="col">Due</th>
                 <th scope="col">Priority</th>
                 <th scope="col">Status</th>
                 <th scope="col"><span class="visually-hidden">Actions</span></th>
@@ -138,8 +150,8 @@
       </section>
 
       <!-- Latest activity: drawn by js/activity.js from the store's activity log -->
-      <section class="mt-5" aria-labelledby="activity-heading">
-        <h2 id="activity-heading" class="lede mb-3">
+      <section class="section pb-0" aria-labelledby="activity-heading">
+        <h2 id="activity-heading" class="lede mb-4">
           <span>Latest activity.</span>
           <span class="lede-muted">Everything your agents did, newest first.</span>
         </h2>

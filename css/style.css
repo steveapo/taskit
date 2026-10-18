@@ -10,9 +10,10 @@
  *   3. Base type          headings, mono, labels, section spacing
  *   4. Components         focus, buttons, links, forms, cards, tables, badges, header, footer
  *   5. Layout patterns    two-tone headings, panels, stages, window, rows, chips, tiles
- *   6. Motion             reveal on scroll, working dot, self-drawing check
- *   7. Page widgets       older pieces the other pages still use (restyled in step 3)
- *   8. Reduced motion
+ *   6. App pages          Tasks and Analytics: stat strip, pills, composer, table, charts, board
+ *   7. Motion             reveal on scroll, working dot, self-drawing check, new-row flash
+ *   8. Page widgets       older pieces the other pages still use (restyled in step 3)
+ *   9. Reduced motion
  */
 
 /* ---------- 1. Tokens ---------- */
@@ -87,6 +88,8 @@
   --bs-primary: var(--tk-accent);                   /* Bootstrap's "primary" is our accent */
   --bs-danger: var(--tk-danger);                    /* and "danger" is our red */
   --bs-focus-ring-color: var(--tk-accent);          /* .focus-ring helper */
+  --bs-form-invalid-color: var(--tk-danger);        /* form error text ("Give the task a name.") */
+  --bs-form-invalid-border-color: var(--tk-danger); /* and the red border on invalid fields */
 
   /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
   --bs-body-bg-rgb: var(--tk-bg-rgb);
@@ -680,7 +683,216 @@ b, strong { font-weight: 500; }
   .quote-panel { grid-template-columns: 14rem minmax(0, 1fr) auto; gap: 1.5rem; }
 }
 
-/* ---------- 6. Motion ---------- */
+/* ---------- 6. App pages: Tasks and Analytics ---------- */
+
+/* Stat strip: three numbers side by side, split by hairlines instead of boxed in cards.
+   It is a <dl>: each .stat holds a <dt> label and a <dd> number. */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-block: 1px solid var(--tk-border);
+}
+.stat { padding: 1rem 1.25rem; }
+.stat:first-child { padding-left: 0; }  /* the first number lines up with the heading */
+.stat + .stat { border-left: 1px solid var(--tk-border); }
+.stat-value {
+  margin: .25rem 0 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* Pill control: a small rounded box holding a muted prefix ("Priority") and a borderless
+   select or date input. Used in the composer, the toolbar and on the board cards. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  height: 2rem;
+  padding: 0 .75rem;
+  font-size: .8125rem;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-pill);
+  transition: border-color .15s var(--tk-ease);
+}
+.pill:hover { border-color: color-mix(in oklch, var(--tk-muted) 50%, transparent); }
+/* The keyboard focus ring goes round the whole pill, not round the select inside it. */
+.pill:has(:focus-visible) { outline: 2px solid var(--tk-accent); outline-offset: 2px; }
+.pill :focus-visible { outline: none; }
+.pill-prefix { display: inline-flex; align-items: center; color: var(--tk-muted); white-space: nowrap; }
+/* The select or date inside: no box of its own, the pill is the box. */
+.pill-select,
+.pill-date {
+  appearance: none;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tk-text);
+  font: inherit;
+  cursor: pointer;
+}
+/* Room on the right for the chevron, which is pulled back over that space.
+   pointer-events: none lets a click on the chevron reach the select underneath. */
+.pill-select { padding-right: 1.25rem; }
+.pill-chevron { margin-left: -1.375rem; color: var(--tk-muted); pointer-events: none; }
+/* Some systems draw the open option list in the select's own colours: give it solid ones. */
+.pill-select option { background-color: var(--tk-bg); color: var(--tk-text); }
+/* An empty date is still invalid, so its dd/mm/yyyy hint shows in muted, like a placeholder. */
+.pill-date { position: relative; }
+.pill-date:invalid { color: var(--tk-muted); }
+/* Chrome's own calendar button: invisible and stretched over the whole field, so a click
+   anywhere on the date opens the picker. Our calendar icon is the one you see. */
+.pill-date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Composer: the add / edit form as one box, like a chat prompt. The name and the details
+   have no borders of their own; the box's border turns accent while you are in it. */
+.composer {
+  padding: .875rem 1rem .75rem;
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+  transition: border-color .15s var(--tk-ease);
+}
+.composer:focus-within { border-color: var(--tk-accent); }
+.composer-name,
+.composer-detail {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tk-text);
+}
+/* The accent border above is the focus signal for these two, so no second ring. */
+.composer-name:focus-visible,
+.composer-detail:focus-visible { outline: none; }
+.composer-name { font-size: 1.125rem; }
+.composer-detail {
+  margin-top: .375rem;
+  font-size: .9375rem;
+  resize: none;
+  min-height: 3rem;
+  max-height: 12rem;
+  field-sizing: content; /* grows with the text (newer browsers; others keep rows="2" and scroll) */
+}
+.composer-name::placeholder,
+.composer-detail::placeholder,
+.search-input::placeholder { color: var(--tk-muted); opacity: 1; }
+/* Bottom bar: pills on the left, buttons pushed right. Wraps onto more lines on phones. */
+.composer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+.composer-actions { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+/* Round send button with the arrow-up icon. Its colours come from .btn-primary (accent). */
+.composer-send {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+}
+/* After a failed submit Bootstrap adds .was-validated to the form: red borders on the
+   composer or pill that holds an invalid field. */
+.was-validated .composer:has(.composer-name:invalid, .composer-detail:invalid),
+.was-validated .pill:has(:invalid) { border-color: var(--tk-danger); }
+/* Bootstrap only shows an .invalid-feedback placed right after its field. Ours sit under the
+   composer, so :has() asks the form whether that field is invalid instead. */
+.composer-errors .invalid-feedback { margin: .375rem 0 0; }
+.was-validated:has(#task-name:invalid) .error-name,
+.was-validated:has(#task-description:invalid) .error-detail,
+.was-validated:has(#task-due:invalid) .error-due { display: block; }
+
+/* Toolbar: search, then the filter and sort pills, on one row that wraps on phones. */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+/* The search box is a wider pill: icon, input, and a "/" key cap that hides once you're in. */
+.search-field { flex: 1 1 14rem; max-width: 22rem; padding-right: .375rem; color: var(--tk-muted); }
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tk-text);
+  font: inherit;
+}
+.search-field:focus-within .kbd { display: none; }
+/* Phones: iPhones zoom the whole page into any field whose text is under 16px, so the
+   fields go up to 16px there (the pills grow a little to fit). */
+@media (max-width: 767.98px) {
+  .pill,
+  .composer-detail { font-size: 1rem; }
+  .pill { height: 2.25rem; }
+}
+
+/* Task table: Bootstrap's own table, re-coloured through its variables. Rows are split by
+   hairlines, and tint to the surface colour on hover (.table-hover). */
+.task-table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--tk-text);
+  --bs-table-border-color: var(--tk-border);
+  --bs-table-hover-bg: var(--tk-surface);
+  --bs-table-hover-color: var(--tk-text);
+}
+.task-table > :not(caption) > * > * { padding: .75rem; font-size: .875rem; }
+.task-table > thead th { padding-block: .5rem; font-size: .75rem; white-space: nowrap; }
+.task-table caption { padding: .75rem 0 0; font-size: .8125rem; color: var(--tk-muted); }
+.task-cell { min-width: 13rem; max-width: 32rem; }
+.task-name { display: block; font-size: 1rem; }  /* the name is the one thing in a row at full size */
+.task-detail { display: block; margin-top: .125rem; font-size: .8125rem; color: var(--tk-muted); }
+.task-row.is-done .task-name { color: var(--tk-muted); } /* finished work steps back; no strikethrough */
+.task-table .task-empty { padding: 1.5rem .75rem; color: var(--tk-muted); }
+
+/* Status (icon + word) and priority (shape + word). The word always carries the meaning. */
+.status,
+.prio { display: inline-flex; align-items: center; gap: .5rem; }
+.status .row-icon { margin-top: 0; }
+.prio-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; }
+.prio-dot.is-high { background-color: var(--tk-text); }     /* filled, strongest */
+.prio-dot.is-medium { background-color: var(--tk-muted); }  /* filled, softer */
+.prio-dot.is-low { border: 1.5px solid var(--tk-muted); }   /* hollow ring */
+
+/* Small ghost icon button (the row actions): muted icon, a hairline box on hover. */
+.btn-icon {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-color: var(--tk-muted);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--tk-text);
+  --bs-btn-hover-bg: var(--tk-bg);
+  --bs-btn-hover-border-color: var(--tk-border);
+  --bs-btn-active-color: var(--tk-text);
+  --bs-btn-active-bg: var(--tk-bg);
+  --bs-btn-active-border-color: var(--tk-border);
+  --bs-btn-disabled-color: var(--tk-muted);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: transparent;
+  --bs-btn-disabled-opacity: .35;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+}
+/* Delete turns red when you point at it or tab to it: red means "this destroys something". */
+.btn-icon-danger:hover,
+.btn-icon-danger:focus-visible { --bs-btn-color: var(--tk-danger); --bs-btn-hover-color: var(--tk-danger); }
+
+/* ---------- 7. Motion ---------- */
 /* Only opacity and transform move (cheap for the browser), and all of it switches off
    under "reduce motion" in section 8. */
 
@@ -717,7 +929,12 @@ b, strong { font-weight: 500; }
 .check-draw.is-new path { animation: tk-draw .3s var(--tk-ease) .1s both; }
 @keyframes tk-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
-/* ---------- 7. Page widgets (other pages, restyled in step 3) ---------- */
+/* New task: its table row starts with a surface tint that fades out once. A keyframe with
+   only "from" animates back to the row's normal (transparent) background. */
+.task-row.is-new > td { animation: tk-flash 1.2s var(--tk-ease); }
+@keyframes tk-flash { from { background-color: var(--tk-surface); } }
+
+/* ---------- 8. Page widgets (other pages, restyled in step 3) ---------- */
 
 /* Page intro band (About page): plain background closed off by a hairline. */
 .hero {
@@ -780,13 +997,16 @@ b, strong { font-weight: 500; }
 [data-bs-theme="dark"] .testimonial-carousel.carousel .carousel-control-next-icon { filter: none; }
 .testimonial-carousel.carousel .carousel-indicators [data-bs-target] { background-color: var(--tk-text); }
 
-/* ---------- 8. Reduced motion ---------- */
+/* ---------- 9. Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .bar-chart .bar,
   .link-arrow .icon,
+  .pill,
+  .composer,
   .js-reveal .reveal { transition: none; }
   .js-reveal .reveal.is-waiting { opacity: 1; transform: none; }  /* belt and braces: never hidden */
   .dot-working,
-  .check-draw.is-new path { animation: none; }
+  .check-draw.is-new path,
+  .task-row.is-new > td { animation: none; }
 }
