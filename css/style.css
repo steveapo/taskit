@@ -14,7 +14,8 @@
  *                         board, agent panels
  *   7. Motion             reveal on scroll, working dot, self-drawing check, new-row flash
  *   8. About page         team panels, testimonial carousel, GitHub commit rows
- *   9. Reduced motion
+ *   9. Contact page       form box, info blocks, map, confirmation modal
+ *  10. Reduced motion
  */
 
 /* ---------- 1. Tokens ---------- */
@@ -1155,12 +1156,83 @@ b, strong { font-weight: 500; }
 .commit-link:hover .commit-message { text-decoration: underline; text-underline-offset: .2em; }
 .commit-link:hover > .icon { color: var(--tk-text); }
 
-/* ---------- 9. Reduced motion ---------- */
+/* ---------- 9. Contact page ---------- */
+
+/* The form: one rounded surface, like the Tasks composer. Its border turns accent while
+   any field inside has focus. */
+.contact-form {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+  transition: border-color .15s var(--tk-ease);
+  --bs-form-valid-border-color: var(--tk-border); /* see the validation rules below */
+}
+.contact-form:focus-within { border-color: var(--tk-accent); }
+/* The fields use the page colour, one step away from the box, so they read as wells to type
+   into. It is also the colour Bootstrap gives a field on focus, so focusing doesn't flicker. */
+.contact-form .form-control { background-color: var(--tk-bg); }
+
+/* After a failed submit Bootstrap paints valid fields green and puts a tick or "!" picture
+   inside every field. Here only the problem fields change: a red border and the message
+   under them. The valid border colour is reset through the variable above; these rules
+   drop the pictures and the right padding that made room for them. */
+.contact-form.was-validated .form-control:valid,
+.contact-form.was-validated .form-control:invalid {
+  padding-right: .75rem;
+  background-image: none;
+}
+
+/* Right column: three quiet blocks (office, map, social) split by hairlines, not boxed. */
+.contact-block + .contact-block {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--tk-border);
+}
+
+/* The map sits edge to edge in a stage: the stage gives the hairline and the 10px rounded
+   corners, and its overflow: hidden clips the iframe's square corners to match. */
+.stage-map { display: block; min-height: 0; padding: 0; }
+/* On tablets the map spans the full page width, where 4:3 would make it over 500px tall.
+   Bootstrap's .ratio reads its shape from --bs-aspect-ratio, so it becomes 16:9 there. */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .stage-map .ratio { --bs-aspect-ratio: 56.25%; }
+}
+/* Dark mode only: a visual-only treatment of a third-party frame. We can't restyle Google's
+   map, so the whole iframe is inverted (and the colours turned back with hue-rotate) to sit
+   in the dark page instead of glaring white. */
+[data-bs-theme="dark"] .stage-map iframe { filter: invert(.9) hue-rotate(180deg) saturate(.6); }
+
+/* Confirmation modal: Bootstrap's modal recoloured through its own variables. A flat surface
+   with a hairline and the large radius, hairlines above and below the body. */
+.modal {
+  --bs-modal-bg: var(--tk-surface);
+  --bs-modal-border-color: var(--tk-border);
+  --bs-modal-border-radius: var(--tk-radius-lg);
+  --bs-modal-inner-border-radius: calc(var(--tk-radius-lg) - 1px); /* header/footer corners, inside the 1px border */
+  --bs-modal-header-padding: 1rem 1.25rem;
+  --bs-modal-header-border-color: var(--tk-border);
+  --bs-modal-padding: 1.25rem;
+  --bs-modal-footer-border-color: var(--tk-border);
+}
+/* The page behind is only slightly dimmed (Bootstrap's default is 50%). */
+.modal-backdrop { --bs-backdrop-opacity: .4; }
+
+/* The captured values: a <dl> of rows split by hairlines, label above, value under it.
+   pre-wrap keeps the line breaks typed in the message; anywhere breaks long unbroken text. */
+.detail-list { margin: 0; }
+.detail-list > div { padding: .75rem 0; border-top: 1px solid var(--tk-border); }
+.detail-list > div:first-child { padding-top: 0; border-top: 0; }
+.detail-list > div:last-child { padding-bottom: 0; }
+.detail-list dd { margin: .125rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- 10. Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .link-arrow .icon,
   .pill,
   .composer,
+  .contact-form,
   .board-card,
   .js-reveal .reveal { transition: none; }
   .js-reveal .reveal.is-waiting { opacity: 1; transform: none; }  /* belt and braces: never hidden */
