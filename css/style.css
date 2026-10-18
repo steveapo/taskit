@@ -625,14 +625,18 @@ b, strong { font-weight: 500; }
   border-radius: 4px;
 }
 
-/* Tile strip: equal tiles that wrap on their own (no breakpoints needed). */
+/* Tile strip: four equal tiles. Two columns by default (a 2×2 grid) and one row of four
+   on wide screens, so the four agents never split 3 + 1. */
 .tile-strip {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .5rem;
   margin: 0;
   padding: 0;
+}
+@media (min-width: 992px) { /* Bootstrap's lg breakpoint */
+  .tile-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .tile {
   display: flex;
