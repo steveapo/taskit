@@ -116,6 +116,20 @@
       <span class="chip"><i class="bi bi-calendar3" aria-hidden="true"></i>due ${esc(task.dueDate)}</span>`;
   }
 
+  // The (up to) five rows in "This week": open work first (In progress and To do, by due
+  // date), then Done. The task just run always stays in view, even once it's Done and
+  // would otherwise fall below the cut, so the visitor sees its check draw.
+  function visibleTasks(tasks) {
+    const ordered = tasks.filter(t => t.status !== 'done').concat(tasks.filter(t => t.status === 'done'));
+    const shown = ordered.slice(0, 5);
+    const focus = ordered.find(t => t.id === focusId);
+    if (focus && !shown.includes(focus)) {
+      shown.pop();       // make room by dropping the last row...
+      shown.push(focus); // ...and put the run task there
+    }
+    return shown;
+  }
+
   function renderWeek(tasks) {
     const list = document.getElementById('week-list');
     const c = store.counts();
@@ -127,8 +141,9 @@
     }
     // A check draws only for tasks that weren't Done last time we drew (and on first load).
     const doneNow = new Set(tasks.filter(t => t.status === 'done').map(t => t.id));
-    list.innerHTML = tasks.slice(0, 5).map(t => taskRow(t, !drawnDone || !drawnDone.has(t.id))).join('') +
-      '<li><a class="row-add" href="tasks.html">Add a task… <kbd class="kbd">N</kbd></a></li>';
+    // The key cap is aria-hidden so the link's name is just "Add a task…".
+    list.innerHTML = visibleTasks(tasks).map(t => taskRow(t, !drawnDone || !drawnDone.has(t.id))).join('') +
+      '<li><a class="row-add" href="tasks.html">Add a task… <kbd class="kbd" aria-hidden="true">N</kbd></a></li>';
     drawnDone = doneNow;
   }
 
@@ -142,22 +157,30 @@
     else button.textContent = 'All caught up';
   }
 
-  // Runs the simulated agent on the first To do task, so the window updates live:
-  // the row's dot starts pulsing, then its check draws and the step log fills in.
+  // Runs the simulated agent on the first To do task in the "This week" list, so the
+  // run always happens in view: the row's dot starts pulsing, then its check draws and
+  // the step log fills in. (If no To do is in view, any To do will do; it then stays shown.)
   async function runAgent() {
-    const task = tasksByDue().find(t => t.status === 'todo');
+    const tasks = tasksByDue();
+    const isTodo = t => t.status === 'todo';
+    const task = visibleTasks(tasks).find(isTodo) || tasks.find(isTodo);
     if (!task || running) return;
     const status = document.getElementById('run-status');
     const who = agentName(task.agentId);
     running = true;
     focusId = task.id;
     status.textContent = `${who} started “${task.name}”.`;
-    const finished = await sim.run(task.id); // fires taskit:change at the start and at the end
-    running = false;
-    status.textContent = finished ? `${who} completed “${task.name}”.` : `“${task.name}” was stopped.`;
-    // Only the button needs updating: the store's change event already redrew the rest,
-    // and redrawing the rows again now would cut the check's drawing short.
-    renderRunButton(tasksByDue());
+    let finished = false;
+    try {
+      finished = await sim.run(task.id); // fires taskit:change at the start and at the end
+    } finally {
+      // Runs even if the simulation throws, so the button can never stay stuck on "Working…".
+      running = false;
+      status.textContent = finished ? `${who} completed “${task.name}”.` : `“${task.name}” was stopped.`;
+      // Only the button needs updating: the store's change event already redrew the rest,
+      // and redrawing the rows again now would cut the check's drawing short.
+      renderRunButton(tasksByDue());
+    }
   }
 
   /* ---------- feature panels and agents strip ---------- */
@@ -192,7 +215,7 @@
       const cards = '<span class="mini-card"></span>'.repeat(Math.min(c[status], 4));
       const more = c[status] > 4 ? `<span class="mini-more mono">+${c[status] - 4}</span>` : '';
       return `<div class="mini-col">
-          <p class="mini-head"><span>${label}</span><span class="mini-count mono">${c[status]}</span></p>
+          <p class="mini-head"><span class="mini-count mono">${c[status]}</span><span>${label}</span></p>
           ${cards}${more}
         </div>`;
     }).join('');

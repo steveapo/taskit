@@ -283,6 +283,8 @@ b, strong { font-weight: 500; }
    readers don't announce "right arrow". The rules also reset <button> styling. */
 .link-arrow {
   display: inline-flex;
+  width: fit-content; /* inside a flex column (.panel) it would stretch full width; this keeps the
+                         focus ring and the click area hugging the text */
   align-items: center;
   gap: .3em;
   padding: 0;
@@ -634,13 +636,14 @@ b, strong { font-weight: 500; }
   align-content: start;
   gap: .375rem;
   min-height: 11rem;
-  padding: .5rem;
+  padding: .375rem;
   background-color: var(--tk-raised);
   border: 1px solid var(--tk-border);
   border-radius: var(--tk-radius-lg);
 }
-/* Column name on top, its count underneath in the text colour (fits "In progress" in a narrow column). */
-.mini-head { display: grid; margin-bottom: .25rem; font-size: .75rem; line-height: 1.3; color: var(--tk-muted); white-space: nowrap; }
+/* Count on top in the text colour, column name under it. The name may wrap ("In progress"
+   in a narrow column) without knocking the counts out of line across the three columns. */
+.mini-head { display: grid; margin-bottom: .25rem; font-size: .6875rem; line-height: 1.3; color: var(--tk-muted); }
 .mini-count { font-size: 1rem; color: var(--tk-text); }
 .mini-card {
   display: flex;
