@@ -1,68 +1,348 @@
 /*
- * style.css — Taskit's thin theme layer on top of Bootstrap 5.3.
- * Bootstrap handles layout and the light/dark colour modes. This file only adds the
- * brand colour and the widgets Bootstrap doesn't ship (CSS charts, Kanban, testimonials).
+ * style.css — Taskit's look, layered on top of Bootstrap 5.3.
+ * Bootstrap still does the layout and the components. This file changes how they look
+ * by overriding Bootstrap's own CSS variables, so we don't fight its classes.
+ *
+ * Order of this file:
+ *   1. Tokens            our colours, fonts and radius (the single source of truth)
+ *   2. Bootstrap mapping  feeds the tokens into Bootstrap's variables
+ *   3. Base type          headings, mono, labels, section spacing
+ *   4. Components         focus, buttons, forms, cards, tables, badges, header, footer
+ *   5. Page widgets       hero, avatars, charts, Kanban, testimonials
+ *   6. Reduced motion
  */
-:root {
-  --taskit-brand: #6f42c1;
-  --taskit-brand-dark: #59359a;
-  --taskit-brand-text: #6f42c1;
+
+/* ---------- 1. Tokens ---------- */
+
+/* Light theme (also the default before the theme attribute is set).
+   Colours are OKLCH: lightness %, chroma (colourfulness), hue. Hue 215 is our turquoise;
+   the neutrals carry a tiny bit of it (chroma 0.003-0.012) so the greys feel related. */
+:root,
+[data-bs-theme="light"] {
+  --tk-bg: oklch(98.5% 0.003 215);      /* page background, near-white */
+  --tk-surface: oklch(96.5% 0.004 215); /* one step darker: panels, hover fills */
+  --tk-border: oklch(90% 0.006 215);    /* hairline borders */
+  --tk-muted: oklch(50% 0.012 215);     /* secondary text, input outlines */
+  --tk-text: oklch(22% 0.012 215);      /* body text, near-black */
+  --tk-accent: oklch(43% 0.076 215);    /* turquoise (hex 005A6A): primary action, links, focus */
+  --tk-danger: oklch(52% 0.17 25);      /* red: only for destructive actions */
+
+  /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
+  --tk-bg-rgb: 248, 251, 251;
+  --tk-surface-rgb: 241, 244, 245;
+  --tk-text-rgb: 20, 28, 30;
+  --tk-accent-rgb: 0, 90, 106;
+  --tk-danger-rgb: 182, 49, 50;
+
+  --tk-radius: 6px;                     /* the one corner radius used everywhere */
 }
-/* The brand purple is too dark to read on a dark background, so text uses a lighter tint there. */
-[data-bs-theme="dark"] { --taskit-brand-text: #b197fc; }
 
-.text-brand { color: var(--taskit-brand-text) !important; }
+/* Dark theme: the same seven roles, re-tuned so every text pair still passes WCAG AA. */
+[data-bs-theme="dark"] {
+  --tk-bg: oklch(17% 0.006 215);        /* page background, near-black */
+  --tk-surface: oklch(21% 0.007 215);   /* one step lighter: panels, hover fills */
+  --tk-border: oklch(30% 0.008 215);    /* hairline borders */
+  --tk-muted: oklch(72% 0.010 215);     /* secondary text, input outlines */
+  --tk-text: oklch(94% 0.004 215);      /* body text, off-white */
+  --tk-accent: oklch(78% 0.075 215);    /* lighter, calmer turquoise so it reads on dark */
+  --tk-danger: oklch(70% 0.15 25);      /* lighter red for the same reason */
 
-/* Brand button: sets Bootstrap's own button variables so hover/focus/disabled states keep working. */
+  /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
+  --tk-bg-rgb: 13, 16, 17;
+  --tk-surface-rgb: 21, 25, 26;
+  --tk-text-rgb: 232, 236, 237;
+  --tk-accent-rgb: 125, 196, 213;
+  --tk-danger-rgb: 237, 117, 110;
+}
+
+/* ---------- 2. Bootstrap mapping ---------- */
+
+/* Written once for both themes: each variable points at a token, and the token itself
+   changes with the theme. [data-bs-theme] has the same specificity as Bootstrap's own
+   theme blocks, and this file loads after Bootstrap, so these win. */
+:root,
+[data-bs-theme] {
+  --bs-body-bg: var(--tk-bg);                       /* page background */
+  --bs-body-color: var(--tk-text);                  /* default text */
+  --bs-emphasis-color: var(--tk-text);              /* Bootstrap's "strongest" text (tables, strong) */
+  --bs-heading-color: var(--tk-text);               /* headings */
+  --bs-secondary-color: var(--tk-muted);            /* .text-body-secondary */
+  --bs-secondary-bg: var(--tk-surface);             /* .bg-body-secondary, progress track */
+  --bs-tertiary-bg: var(--tk-surface);              /* .bg-body-tertiary */
+  --bs-border-color: var(--tk-border);              /* every 1px border */
+  --bs-border-color-translucent: var(--tk-border);  /* cards and dropdowns use this one */
+  --bs-link-color: var(--tk-accent);                /* links are accent... */
+  --bs-link-hover-color: var(--tk-text);            /* ...and turn to text colour on hover */
+  --bs-primary: var(--tk-accent);                   /* Bootstrap's "primary" is our accent */
+  --bs-danger: var(--tk-danger);                    /* and "danger" is our red */
+  --bs-focus-ring-color: var(--tk-accent);          /* .focus-ring helper */
+
+  /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
+  --bs-body-bg-rgb: var(--tk-bg-rgb);
+  --bs-body-color-rgb: var(--tk-text-rgb);
+  --bs-emphasis-color-rgb: var(--tk-text-rgb);
+  --bs-secondary-bg-rgb: var(--tk-surface-rgb);
+  --bs-tertiary-bg-rgb: var(--tk-surface-rgb);
+  --bs-link-color-rgb: var(--tk-accent-rgb);        /* Bootstrap actually draws links with this one */
+  --bs-link-hover-color-rgb: var(--tk-text-rgb);
+  --bs-primary-rgb: var(--tk-accent-rgb);
+  --bs-danger-rgb: var(--tk-danger-rgb);
+
+  /* Fonts. Body size, line-height and weight keep Bootstrap's defaults: 16px / 1.5 / 400. */
+  --bs-body-font-family: "Geist", system-ui, sans-serif;
+  --bs-font-monospace: "Geist Mono", ui-monospace, monospace;
+
+  /* One radius everywhere (the pill radius stays as Bootstrap has it). */
+  --bs-border-radius-sm: var(--tk-radius);
+  --bs-border-radius: var(--tk-radius);
+  --bs-border-radius-lg: var(--tk-radius);
+}
+
+/* ---------- 3. Base type ---------- */
+
+/* Headings are medium weight, never bold, with tighter letter-spacing as they get bigger. */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 { font-weight: 500; line-height: 1.25; }
+h1, .h1 { font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.1; }
+h2, .h2 { font-size: 1.75rem; letter-spacing: -0.02em; line-height: 1.1; }
+h3, .h3 { font-size: 1.25rem; letter-spacing: -0.02em; }
+h4, .h4, h5, .h5, h6, .h6 { font-size: 1rem; }
+
+/* Big display headings: same idea, pushed further. */
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+/* Mono is for data only: dates, ids, counts. "tnum" makes every digit the same width. */
+.mono { font-family: var(--bs-font-monospace); font-feature-settings: "tnum"; }
+
+/* Small uppercase metadata label. Table headers use the same style. */
+.label,
+.table > thead th {
+  font-size: .75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--tk-muted);
+}
+
+/* Vertical rhythm for page sections: grows with the screen, 64px to 112px. */
+.section { padding-block: clamp(4rem, 9vw, 7rem); }
+
+/* ---------- 4. Components ---------- */
+
+/* Focus: Bootstrap shows a soft blurred glow. We use one crisp 2px accent outline instead.
+   Several Bootstrap components set "outline: 0", so they are listed here to win. */
+:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible,
+.navbar-toggler:focus-visible,
+.btn-close:focus-visible,
+.carousel-control-prev:focus-visible,
+.carousel-control-next:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.form-check-input:focus-visible {
+  outline: 2px solid var(--tk-accent);
+  outline-offset: 2px;
+}
+
+/* Remove the glows themselves. !important also beats Bootstrap's stronger
+   valid/invalid focus rules. (Buttons turn theirs off through a variable, below.) */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.nav-link:focus-visible,
+.navbar-toggler:focus,
+.btn-close:focus { box-shadow: none !important; }
+
+/* No shadows anywhere: neutralise the utility classes the pages still use. */
+.shadow,
+.shadow-sm { box-shadow: none !important; }
+
+/* Buttons. Bootstrap reads all button colours from --bs-btn-* variables, so we set those
+   and hover, active and disabled states keep working. */
+.btn {
+  --bs-btn-font-weight: 500;
+  --bs-btn-focus-box-shadow: none;
+}
+
+/* Primary action. .btn-brand is the old name the pages still use. */
+.btn-primary,
 .btn-brand {
-  --bs-btn-color: #fff;
-  --bs-btn-bg: var(--taskit-brand);
-  --bs-btn-border-color: var(--taskit-brand);
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: var(--taskit-brand-dark);
-  --bs-btn-hover-border-color: var(--taskit-brand-dark);
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: var(--taskit-brand-dark);
-  --bs-btn-active-border-color: var(--taskit-brand-dark);
-  --bs-btn-disabled-color: #fff;
-  --bs-btn-disabled-bg: var(--taskit-brand);
-  --bs-btn-disabled-border-color: var(--taskit-brand);
-  --bs-btn-focus-shadow-rgb: 111, 66, 193;
+  --bs-btn-color: var(--tk-bg);              /* near-white on turquoise / near-black on light turquoise */
+  --bs-btn-bg: var(--tk-accent);
+  --bs-btn-border-color: var(--tk-accent);
+  --bs-btn-hover-color: var(--tk-bg);
+  --bs-btn-hover-bg: color-mix(in oklch, var(--tk-accent) 88%, var(--tk-text)); /* accent nudged toward the text colour */
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-active-color: var(--tk-bg);
+  --bs-btn-active-bg: var(--bs-btn-hover-bg);
+  --bs-btn-active-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-disabled-color: var(--tk-bg);
+  --bs-btn-disabled-bg: var(--tk-accent);
+  --bs-btn-disabled-border-color: var(--tk-accent);
 }
 
-.hero { background: linear-gradient(135deg, rgba(111, 66, 193, .14), rgba(13, 202, 240, .10)); }
+/* Outlined accent button (the "Run agent" icon button). */
+.btn-outline-primary {
+  --bs-btn-color: var(--tk-accent);
+  --bs-btn-border-color: var(--tk-accent);
+  --bs-btn-hover-color: var(--tk-bg);
+  --bs-btn-hover-bg: var(--tk-accent);
+  --bs-btn-hover-border-color: var(--tk-accent);
+  --bs-btn-active-color: var(--tk-bg);
+  --bs-btn-active-bg: var(--tk-accent);
+  --bs-btn-active-border-color: var(--tk-accent);
+  --bs-btn-disabled-color: var(--tk-accent);
+  --bs-btn-disabled-border-color: var(--tk-accent);
+}
 
+/* Quiet secondary button: hairline border, text colour, surface fill on hover. */
+.btn-outline-secondary {
+  --bs-btn-color: var(--tk-text);
+  --bs-btn-border-color: var(--tk-border);
+  --bs-btn-hover-color: var(--tk-text);
+  --bs-btn-hover-bg: var(--tk-surface);
+  --bs-btn-hover-border-color: var(--tk-border);
+  --bs-btn-active-color: var(--tk-text);
+  --bs-btn-active-bg: var(--tk-surface);
+  --bs-btn-active-border-color: var(--tk-border);
+  --bs-btn-disabled-color: var(--tk-muted);
+  --bs-btn-disabled-border-color: var(--tk-border);
+}
+
+/* Destructive button: red text and border, filled red on hover. */
+.btn-outline-danger {
+  --bs-btn-color: var(--tk-danger);
+  --bs-btn-border-color: var(--tk-danger);
+  --bs-btn-hover-color: var(--tk-bg);
+  --bs-btn-hover-bg: var(--tk-danger);
+  --bs-btn-hover-border-color: var(--tk-danger);
+  --bs-btn-active-color: var(--tk-bg);
+  --bs-btn-active-bg: var(--tk-danger);
+  --bs-btn-active-border-color: var(--tk-danger);
+}
+
+/* Form fields: the outline uses the muted colour, not the hairline, because WCAG 1.4.11
+   needs an input's edge to have 3:1 contrast. Focus turns it accent. Bootstrap's
+   green/red valid/invalid borders are more specific, so they still show. */
+.form-control,
+.form-select { border-color: var(--tk-muted); }
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus { border-color: var(--tk-accent); }
+
+/* Cards: just a hairline box, no fill. */
+.card {
+  --bs-card-bg: transparent;
+  --bs-card-border-color: var(--tk-border);
+}
+
+/* Makes the scroll box the "containing block" for the hidden "Actions" header text
+   (.visually-hidden is position: absolute). Without it that text escapes the box and
+   makes the whole page scroll sideways on phones. */
+.table-responsive { position: relative; }
+
+/* Badges are quiet: text plus a hairline, no coloured fill. The pages still add
+   Bootstrap's text-bg-* classes, which use !important, so we need it too to win. */
+.badge {
+  --bs-badge-font-size: .75rem;
+  --bs-badge-font-weight: 500;
+  background-color: transparent !important;
+  color: inherit !important;
+  border: 1px solid var(--tk-border);
+}
+
+/* Shared header: a solid background so the page doesn't show through while it sticks. */
+.site-header { background-color: var(--tk-bg); }
+.site-header .navbar {
+  --bs-navbar-color: var(--tk-muted);          /* links are muted... */
+  --bs-navbar-hover-color: var(--tk-text);     /* ...text colour on hover... */
+  --bs-navbar-active-color: var(--tk-text);    /* ...and on the current page */
+  --bs-navbar-brand-color: var(--tk-text);
+  --bs-navbar-brand-hover-color: var(--tk-text);
+  --bs-navbar-brand-font-size: 1rem;
+}
+.site-header .nav-link { font-size: .875rem; }
+.site-header .nav-link.active { font-weight: 500; }
+
+/* Theme toggle: a 32px square icon button. */
+.theme-toggle { width: 2rem; height: 2rem; }
+
+/* Shared footer: small muted text. */
+.site-footer { font-size: .875rem; color: var(--tk-muted); }
+/* Bootstrap's .link-secondary uses !important with its own grey, so we match it. */
+.site-footer .link-secondary { color: var(--tk-muted) !important; }
+.site-footer .link-secondary:hover,
+.site-footer .link-secondary:focus-visible { color: var(--tk-text) !important; }
+
+/* ---------- 5. Page widgets ---------- */
+
+/* Page intro band: plain background closed off by a hairline. */
+.hero {
+  background-color: var(--tk-bg);
+  border-bottom: 1px solid var(--tk-border);
+}
+
+.text-brand { color: var(--tk-accent) !important; }
+
+/* Agent icon tile. The page still adds a text-bg-* class, so the fill is forced off. */
 .agent-avatar {
-  width: 3rem; height: 3rem; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 50%; font-size: 1.4rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  background-color: transparent !important;
+  color: var(--tk-text) !important;
 }
 
-/* Bar chart: bar heights are set inline from JS as a % of the tallest bar. */
+/* Bar chart: bar heights are set inline from JS as a % of the tallest bar.
+   Bar colours still come from the page's bg-success / bg-warning classes. */
 .bar-chart, .bar-labels { display: flex; justify-content: center; gap: 2.5rem; }
-.bar-chart { align-items: flex-end; height: 200px; border-bottom: 1px solid var(--bs-border-color); }
-.bar-chart .bar { width: 4.5rem; min-height: 2px; border-radius: .375rem .375rem 0 0; transition: height .3s ease; }
+.bar-chart { align-items: flex-end; height: 200px; border-bottom: 1px solid var(--tk-border); }
+.bar-chart .bar { width: 4.5rem; min-height: 2px; border-radius: var(--tk-radius) var(--tk-radius) 0 0; transition: height .3s ease; }
 .bar-labels span { width: 4.5rem; text-align: center; }
 
-/* Pie chart: JS sets a conic-gradient background. The grey is the empty state. */
-.pie-chart { width: 180px; aspect-ratio: 1; border-radius: 50%; background: var(--bs-secondary-bg); }
+/* Pie chart: JS paints the slices as its background. The surface colour is the empty state. */
+.pie-chart { width: 180px; aspect-ratio: 1; border-radius: 50%; background: var(--tk-surface); }
 
 /* Kanban board */
 .kanban-col { min-height: 260px; }
-.kanban-col.drag-over { outline: 2px dashed var(--taskit-brand-text); outline-offset: -6px; }
-.kanban-card { cursor: grab; }
+.kanban-col.drag-over { outline: 1px dashed var(--tk-accent); outline-offset: -6px; }
+.kanban-card { cursor: grab; background-color: var(--tk-bg); } /* a sheet sitting on the column's surface */
 .kanban-card.dragging { opacity: .5; }
-.priority-high { border-left: 4px solid var(--bs-danger) !important; }
-.priority-medium { border-left: 4px solid var(--bs-warning) !important; }
-.priority-low { border-left: 4px solid var(--bs-success) !important; }
+/* Priority used to be a thick coloured side stripe. Each card already says "High priority"
+   in words, so every priority gets the same 1px hairline. */
+.priority-high,
+.priority-medium,
+.priority-low { border: 1px solid var(--tk-border); }
 
-/* Testimonials sit on a fixed brand gradient so Bootstrap's white carousel controls stay visible in both themes. */
-.testimonial-carousel { background: linear-gradient(135deg, #6f42c1, #3d2a8c); color: #fff; border-radius: 1rem; }
+/* Testimonials: a surface panel with a hairline, in the normal text colour. */
+.testimonial-carousel {
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  color: var(--tk-text);
+}
 .testimonial-carousel .carousel-item { padding: 3rem 4.5rem 3.5rem; }
-/* Bootstrap's dark mode turns carousel controls black; keep them white on the purple gradient in both themes. */
+/* Bootstrap's arrow icons are white images. On the light surface we invert them to dark;
+   in dark mode they stay white. ".testimonial-carousel.carousel" is specific enough to
+   beat Bootstrap's own "[data-bs-theme=dark] .carousel ..." rules. */
 .testimonial-carousel.carousel .carousel-control-prev-icon,
-.testimonial-carousel.carousel .carousel-control-next-icon { filter: none; }
-.testimonial-carousel.carousel .carousel-indicators [data-bs-target] { background-color: #fff; }
+.testimonial-carousel.carousel .carousel-control-next-icon { filter: invert(1); }
+[data-bs-theme="dark"] .testimonial-carousel.carousel .carousel-control-prev-icon,
+[data-bs-theme="dark"] .testimonial-carousel.carousel .carousel-control-next-icon { filter: none; }
+.testimonial-carousel.carousel .carousel-indicators [data-bs-target] { background-color: var(--tk-text); }
+
+/* ---------- 6. Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .bar-chart .bar { transition: none; }

@@ -19,6 +19,11 @@
     ['X', 'bi-twitter-x', 'https://x.com'],
     ['Instagram', 'bi-instagram', 'https://www.instagram.com'],
   ];
+  // The Taskit mark: a rounded square with a tick. currentColor makes it follow the text
+  // colour, so it switches with the theme. (img/logo.svg is still the favicon.)
+  const LOGO_SVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="1.75" y="1.75" width="16.5" height="16.5" rx="5"/><path d="M6.5 10.25l2.5 2.5 4.5-5"/></svg>`;
   // Text fields we re-check ourselves, because the browser's `required` accepts "   ".
   const TEXT_FIELDS = 'textarea[required], input[required][type="text"]';
 
@@ -72,10 +77,10 @@
     }).join('');
     return `
       <a class="visually-hidden-focusable position-absolute z-3 p-2 bg-body" href="#main">Skip to main content</a>
-      <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom" aria-label="Main navigation">
+      <nav class="navbar navbar-expand-lg border-bottom" aria-label="Main navigation">
         <div class="container">
-          <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="index.html">
-            <img src="img/logo.svg" alt="" width="32" height="32">
+          <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="index.html">
+            ${LOGO_SVG}
             Taskit <span class="fw-normal text-body-secondary d-none d-sm-inline">· ${pageLabel}</span>
           </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
@@ -84,8 +89,8 @@
           </button>
           <div class="collapse navbar-collapse" id="main-nav">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">${links}</ul>
-            <button id="theme-toggle" class="btn btn-outline-secondary ms-lg-3 mb-2 mb-lg-0" type="button"
-                    aria-label="Toggle dark mode" aria-pressed="false">
+            <button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false"
+                    class="theme-toggle btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center p-0 ms-lg-3 mb-2 mb-lg-0">
               <i class="bi bi-moon-stars" aria-hidden="true"></i>
             </button>
           </div>
@@ -98,18 +103,18 @@
       <div class="container py-4">
         <div class="row gy-3 align-items-center">
           <div class="col-md-4">
-            <a href="index.html" class="d-inline-flex align-items-center gap-2 fw-bold text-body text-decoration-none">
-              <img src="img/logo.svg" alt="" width="28" height="28"> Taskit
+            <a href="index.html" class="d-inline-flex align-items-center gap-2 fw-semibold text-body text-decoration-none">
+              ${LOGO_SVG} Taskit
             </a>
-            <p class="small text-body-secondary mb-0 mt-2">A demo project. The AI agents are simulated.</p>
+            <p class="mb-0 mt-2">A demo project. The AI agents are simulated.</p>
           </div>
-          <div class="col-md-4 small">
+          <div class="col-md-4">
             <a href="mailto:hello@taskit.example">hello@taskit.example</a><br>
             Athens, Greece
           </div>
           <div class="col-md-4 text-md-end">${socialLinksHtml()}</div>
         </div>
-        <p class="small text-body-secondary text-center mt-4 mb-0">&copy; ${new Date().getFullYear()} Taskit. All rights reserved.</p>
+        <p class="text-center mt-4 mb-0">&copy; ${new Date().getFullYear()} Taskit. All rights reserved.</p>
       </div>`;
   }
 
@@ -150,11 +155,11 @@
     const header = document.getElementById('site-header');
     const footer = document.getElementById('site-footer');
     if (header) {
-      header.className = 'sticky-top';
+      header.className = 'site-header sticky-top';
       header.innerHTML = headerHtml();
     }
     if (footer) {
-      footer.className = 'border-top bg-body-tertiary mt-5';
+      footer.className = 'site-footer border-top mt-5';
       footer.innerHTML = footerHtml();
     }
     applyTheme(document.documentElement.getAttribute('data-bs-theme')); // sync the new button's icon
