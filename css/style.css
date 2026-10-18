@@ -8,7 +8,7 @@
  *   1. Tokens             colours, radii and easing (the single source of truth)
  *   2. Bootstrap mapping  feeds the tokens into Bootstrap's variables
  *   3. Base type          headings, mono, labels, section spacing
- *   4. Components         focus, buttons, links, forms, cards, tables, badges, tooltips, header, footer
+ *   4. Components         focus, buttons, links, forms, cards, tables, tooltips, header, footer
  *   5. Layout patterns    two-tone headings, panels, stages, window, rows, chips, tiles
  *   6. App pages          Tasks, Analytics, Agents: stat strip, pills, composer, table, charts,
  *                         board, agent panels
@@ -182,10 +182,6 @@ b, strong { font-weight: 500; }
 .navbar-toggler:focus,
 .btn-close:focus { box-shadow: none !important; }
 
-/* No shadows anywhere: neutralise the utility classes the pages still use. */
-.shadow,
-.shadow-sm { box-shadow: none !important; }
-
 /* Buttons. Bootstrap reads all button colours from --bs-btn-* variables, so we set those
    and hover, active and disabled states keep working. */
 .btn {
@@ -345,16 +341,6 @@ b, strong { font-weight: 500; }
    (.visually-hidden is position: absolute). Without it that text escapes the box and
    makes the whole page scroll sideways on phones. */
 .table-responsive { position: relative; }
-
-/* Badges are quiet: text plus a hairline, no coloured fill. The pages still add
-   Bootstrap's text-bg-* classes, which use !important, so we need it too to win. */
-.badge {
-  --bs-badge-font-size: .75rem;
-  --bs-badge-font-weight: 500;
-  background-color: transparent !important;
-  color: inherit !important;
-  border: 1px solid var(--tk-border);
-}
 
 /* Tooltips (only the Agents page uses them): a box in the text colour with page-colour
    text, so it flips with the theme. Bootstrap's 90% opacity and arrow are dropped. */

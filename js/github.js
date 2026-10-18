@@ -24,7 +24,7 @@
     403: LIMIT,
     429: LIMIT,
     network: "Couldn't reach GitHub. Check your connection.",
-    other: "GitHub sent an answer Taskit couldn't read. Try again later.",
+    other: "GitHub didn't respond properly. Try again later.", // 5xx, broken JSON, not a list
   };
 
   const esc = Taskit.store.escapeHtml;
@@ -73,11 +73,12 @@
     return `<li class="text-body-secondary">${html}</li>`;
   }
 
-  // "5 minutes ago" from the commit date. If the date can't be read, show it as it came;
-  // if there is none, show nothing.
+  // "5 minutes ago" from the commit date. If the date can't be read, or activity.js
+  // (which has timeAgo) isn't loaded, show the date as it came; if there is none, nothing.
   function whenText(date) {
     const ms = Date.parse(date);
-    return Number.isNaN(ms) ? String(date || '') : Taskit.activity.timeAgo(ms);
+    const canSayAgo = Taskit.activity && Taskit.activity.timeAgo;
+    return Number.isNaN(ms) || !canSayAgo ? String(date || '') : Taskit.activity.timeAgo(ms);
   }
 
   // One commit row. Every value from the API is escaped before it goes into the HTML,

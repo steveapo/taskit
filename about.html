@@ -88,8 +88,9 @@
         </div>
       </section>
 
-      <!-- Testimonials: Bootstrap's carousel, driven only by its data attributes (no custom JS).
-           It moves on every 6 seconds and pauses while the pointer is over it. -->
+      <!-- Testimonials: Bootstrap's carousel, set up by its data attributes. It moves on every
+           6 seconds; js/about.js adds the pause / play button, pauses while the pointer or the
+           keyboard focus is on it, and starts paused if the user asked for reduced motion. -->
       <section class="section pb-0" aria-labelledby="testimonials-heading">
         <h2 id="testimonials-heading" class="lede mb-4">
           <span>What people say.</span>
@@ -125,6 +126,10 @@
                 <button type="button" data-bs-target="#testimonials" data-bs-slide-to="2" aria-label="Testimonial 3"></button>
               </div>
               <div class="d-flex gap-1">
+                <!-- Pause / play. js/about.js swaps its icon and label; this is the starting state. -->
+                <button id="carousel-toggle" class="btn btn-icon" type="button" aria-label="Pause testimonials">
+                  <span data-icon="pause"></span>
+                </button>
                 <button class="btn btn-icon" type="button" data-bs-target="#testimonials" data-bs-slide="prev">
                   <span data-icon="chevron-left"></span>
                   <span class="visually-hidden">Previous testimonial</span>
@@ -171,5 +176,6 @@
   <script src="js/store.js"></script>
   <script src="js/activity.js"></script>
   <script src="js/github.js"></script>
+  <script src="js/about.js"></script>
 </body>
 </html>

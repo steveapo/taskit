@@ -18,7 +18,7 @@
   const STEPS = { started: 'Started', completed: 'Completed', edited: 'Edited', moved: 'Moved' };
   // The word in front of the agent's name in a task row ("Working · Athena").
   const STATUS_WORD = { todo: 'Queued', 'in-progress': 'Working', done: 'Done' };
-  const COLUMNS = [['todo', 'To do'], ['in-progress', 'In progress'], ['done', 'Done']];
+  const COLUMNS = [['todo', 'To do'], ['in-progress', 'In progress'], ['done', 'Completed']];
 
   let focusId = null;      // the task the "Agent run" pane follows once the visitor runs one
   let running = false;     // true while the simulated agent is working
