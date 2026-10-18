@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/layout.js"></script>
 </head>
@@ -24,6 +23,13 @@
       <p class="lead">Four specialists, each named after a figure from Ancient Greece. Give each task to the agent whose skills fit best. Hover over or focus on a skill to see what it covers.</p>
       <!-- One card per agent, rendered by js/agents.js from the store -->
       <div id="agent-grid" class="row row-cols-1 row-cols-md-2 g-4 mt-1"></div>
+
+      <!-- "Agent thought of the day": the quote from the public API, loaded by js/quote.js -->
+      <section class="panel quote-panel mt-5" aria-labelledby="quote-heading">
+        <h2 id="quote-heading" class="label mb-0">Agent thought of the day</h2>
+        <div id="quote" aria-live="polite"></div>
+        <button id="new-quote" type="button" class="link-arrow">New thought <span data-icon="arrow-path"></span></button>
+      </section>
     </div>
   </main>
 
@@ -31,6 +37,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="js/store.js"></script>
+  <script src="js/quote.js"></script>
   <script src="js/agents.js"></script>
 </body>
 </html>

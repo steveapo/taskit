@@ -2,7 +2,8 @@
  * agents.js — Agents page (the "page of choice").
  * Shows a card for each simulated agent with live stats from the task store:
  * a Working/Idle badge, a progress bar of completed vs assigned tasks, and a
- * skills list group with Bootstrap tooltips.
+ * skills list group with Bootstrap tooltips. Under the cards sits the "Agent thought
+ * of the day" quote, which comes from a public API (see js/quote.js).
  */
 (function (Taskit) {
   'use strict';
@@ -26,14 +27,14 @@
     const skills = agent.skills.map(skill =>
       `<li class="list-group-item px-0">
          <span tabindex="0" data-bs-toggle="tooltip" data-bs-title="${esc(skill.tip)}">
-           ${esc(skill.name)} <i class="bi bi-info-circle small text-body-secondary" aria-hidden="true"></i>
+           ${esc(skill.name)} ${Taskit.icon('information-circle', 'text-body-secondary')}
          </span>
        </li>`).join('');
     return `<div class="col">
         <article class="card h-100 shadow-sm">
           <div class="card-body">
             <div class="d-flex align-items-center gap-3 mb-3">
-              <span class="agent-avatar text-bg-${agent.color}"><i class="bi ${agent.icon}" aria-hidden="true"></i></span>
+              <span class="agent-avatar text-bg-${agent.color}">${Taskit.icon(agent.icon)}</span>
               <div class="flex-grow-1">
                 <h2 class="h5 mb-0">${esc(agent.name)}</h2>
                 <p class="small text-body-secondary mb-0">${esc(agent.role)}</p>
@@ -67,6 +68,12 @@
     grid.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
   }
 
+  // "Agent thought of the day" (the API feature) lives under the cards; js/quote.js does the fetching.
+  const quoteBox = document.getElementById('quote');
+  const quoteButton = document.getElementById('new-quote');
+  quoteButton.addEventListener('click', () => Taskit.quote.load(quoteBox, quoteButton));
+
   document.addEventListener('taskit:change', render);
   render();
+  Taskit.quote.load(quoteBox, quoteButton);
 })(window.Taskit);

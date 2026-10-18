@@ -278,9 +278,20 @@ b, strong { font-weight: 500; }
 .btn-pill.btn-sm,
 .btn-pill-ghost.btn-sm { --bs-btn-padding-x: .75rem; }
 
-/* Arrow link: accent text with a trailing arrow that nudges right on hover.
-   The arrow is drawn by CSS; the "/ ''" part gives it empty alt text, so screen
-   readers don't announce "right arrow". The rules also reset <button> styling. */
+/* Icons: every icon is an inline Heroicons SVG made by Taskit.icon() in layout.js.
+   1em square, so it scales with the text around it, and it draws in currentColor, so it
+   is muted wherever the text is muted. vertical-align lines it up with the text. */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+.icon-sm { width: .875em; height: .875em; }
+.icon-lg { width: 1.25em; height: 1.25em; }
+
+/* Arrow link: accent text with a trailing icon (arrow-right, arrow-path...) that nudges
+   right on hover. The icon is an SVG after the text. The rules also reset <button> styling. */
 .link-arrow {
   display: inline-flex;
   width: fit-content; /* inside a flex column (.panel) it would stretch full width; this keeps the
@@ -293,18 +304,12 @@ b, strong { font-weight: 500; }
   color: var(--tk-accent);
   text-decoration: none;
 }
-.link-arrow::after {
-  content: "→";
-  content: "→" / "";
-  transition: transform .2s var(--tk-ease);
-}
+.link-arrow .icon { transition: transform .2s var(--tk-ease); }
 .link-arrow:hover { color: var(--tk-accent); }
-.link-arrow:hover::after { transform: translateX(2px); }
+.link-arrow:hover .icon { transform: translateX(2px); }
 .link-arrow:focus-visible { text-decoration: underline; }
 .link-arrow:disabled { color: var(--tk-muted); cursor: default; }
-.link-arrow:disabled::after { transform: none; }
-/* Variant with a "refresh" glyph, for buttons that fetch something new. */
-.link-arrow-refresh::after { content: "↻"; content: "↻" / ""; }
+.link-arrow:disabled .icon { transform: none; }
 
 /* Form fields: a quiet hairline that only firms up on hover and turns accent on focus
    (plus the focus outline above). Bootstrap's green/red valid/invalid borders are more
@@ -358,6 +363,8 @@ b, strong { font-weight: 500; }
   --bs-navbar-toggler-border-color: var(--tk-border);
 }
 .site-header .navbar-brand { font-weight: 500; }
+/* The menu button on phones now holds a Heroicons "bars-3" instead of Bootstrap's picture. */
+.site-header .navbar-toggler .icon { width: 1.5rem; height: 1.5rem; vertical-align: middle; }
 .site-header .nav-link { font-size: .875rem; }
 /* The current page is text colour AND medium weight, so colour isn't the only signal. */
 .site-header .nav-link.active { font-weight: 500; }
@@ -387,10 +394,17 @@ b, strong { font-weight: 500; }
 .site-footer a:not(.footer-brand) { color: var(--tk-muted); text-decoration: none; }
 .site-footer a:not(.footer-brand):hover { color: var(--tk-text); }
 .footer-brand { color: var(--tk-text); font-weight: 500; text-decoration: none; }
-/* Bootstrap's .link-secondary uses !important with its own grey, so we match it. */
-.site-footer .link-secondary { color: var(--tk-muted) !important; }
-.site-footer .link-secondary:hover,
-.site-footer .link-secondary:focus-visible { color: var(--tk-text) !important; }
+/* Social links ("GitHub ↗" with an SVG arrow): muted, text colour on hover. They are
+   styled here, not under .site-footer, because the Contact page reuses them. */
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  color: var(--tk-muted);
+  text-decoration: none;
+}
+.social-link:hover,
+.social-link:focus-visible { color: var(--tk-text); }
 
 /* ---------- 5. Layout patterns ---------- */
 
@@ -514,7 +528,8 @@ b, strong { font-weight: 500; }
   color: var(--tk-muted);
 }
 .steps li { display: flex; align-items: center; gap: .5rem; }
-.steps .bi { font-size: .75rem; }
+/* The bullet before each step: a 4px muted dot (a plain CSS shape, not an icon). */
+.step-dot { width: 4px; height: 4px; flex-shrink: 0; border-radius: 50%; background-color: var(--tk-muted); }
 
 /* Chip: a small mono tag on a stage fill, like a file name or a date. */
 .chip {
@@ -628,7 +643,7 @@ b, strong { font-weight: 500; }
   font-size: .8125rem;
   color: var(--tk-muted);
 }
-.picker-list .bi { margin-left: auto; }
+.picker-list .icon { margin-left: auto; }
 /* Mini board: three columns with a count and up to four placeholder cards each. */
 .mini-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; width: 100%; }
 .mini-col {
@@ -769,7 +784,7 @@ b, strong { font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   .bar-chart .bar,
-  .link-arrow::after,
+  .link-arrow .icon,
   .js-reveal .reveal { transition: none; }
   .js-reveal .reveal.is-waiting { opacity: 1; transform: none; }  /* belt and braces: never hidden */
   .dot-working,

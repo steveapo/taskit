@@ -1,6 +1,6 @@
 /*
  * tasks.js — Tasks page: add/edit form, the task table, summary counts, and the
- * search/filter/sort toolbar.
+ * search/filter/sort toolbar, and the "Latest activity" feed under the table (js/activity.js).
  * The table is never edited directly: every action goes through Taskit.store, whose
  * `taskit:change` event triggers render(), so the table and counts always match the data.
  */
@@ -36,7 +36,7 @@
   function actionButton(action, id, icon, style, label, disabled) {
     return `<button type="button" class="btn btn-sm ${style}" data-action="${action}" data-id="${id}"
               aria-label="${label}" title="${label}"${disabled ? ' disabled' : ''}>
-              <i class="bi ${icon}" aria-hidden="true"></i></button>`;
+              ${Taskit.icon(icon)}</button>`;
   }
 
   function rowHtml(t) {
@@ -53,10 +53,10 @@
         <td><span class="badge ${PRIORITY_BADGE[t.priority] || ''} text-capitalize">${esc(t.priority)}</span></td>
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td class="text-nowrap text-end">
-          ${actionButton('run', id, 'bi-play-fill', 'btn-outline-primary', `Run agent on ${name}`, t.status !== 'todo')}
-          ${actionButton('complete', id, 'bi-check-lg', 'btn-outline-success', `Mark ${name} as completed`, done)}
-          ${actionButton('edit', id, 'bi-pencil', 'btn-outline-secondary', `Edit ${name}`, false)}
-          ${actionButton('delete', id, 'bi-trash', 'btn-outline-danger', `Delete ${name}`, false)}
+          ${actionButton('run', id, 'play', 'btn-outline-primary', `Run agent on ${name}`, t.status !== 'todo')}
+          ${actionButton('complete', id, 'check', 'btn-outline-success', `Mark ${name} as completed`, done)}
+          ${actionButton('edit', id, 'pencil-square', 'btn-outline-secondary', `Edit ${name}`, false)}
+          ${actionButton('delete', id, 'trash', 'btn-outline-danger', `Delete ${name}`, false)}
         </td>
       </tr>`;
   }
@@ -155,7 +155,19 @@
     });
   });
 
+  /* ---------- latest activity (drawn by js/activity.js) ---------- */
+
+  // Redraws the feed. `announce` is false for the 60-second refresh, which only keeps
+  // "5 minutes ago" fresh: the status line must stay quiet then, so screen readers
+  // only hear about real changes.
+  function renderActivity(announce) {
+    const newest = Taskit.activity.render($('activity-list'), 8);
+    if (announce) $('activity-status').textContent = newest ? 'Latest: ' + newest : '';
+  }
+
   fillAgentSelects();
-  document.addEventListener('taskit:change', render);
+  document.addEventListener('taskit:change', () => { render(); renderActivity(true); });
+  setInterval(() => renderActivity(false), 60000);
   render();
+  renderActivity(false);
 })(window.Taskit);
