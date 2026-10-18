@@ -59,6 +59,10 @@
 /* Testimonials sit on a fixed brand gradient so Bootstrap's white carousel controls stay visible in both themes. */
 .testimonial-carousel { background: linear-gradient(135deg, #6f42c1, #3d2a8c); color: #fff; border-radius: 1rem; }
 .testimonial-carousel .carousel-item { padding: 3rem 4.5rem 3.5rem; }
+/* Bootstrap's dark mode turns carousel controls black; keep them white on the purple gradient in both themes. */
+.testimonial-carousel.carousel .carousel-control-prev-icon,
+.testimonial-carousel.carousel .carousel-control-next-icon { filter: none; }
+.testimonial-carousel.carousel .carousel-indicators [data-bs-target] { background-color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .bar-chart .bar { transition: none; }
