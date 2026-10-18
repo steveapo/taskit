@@ -15,7 +15,7 @@
   // The four simulated agents. Fixed in code: users assign tasks to them but can't edit them.
   const AGENTS = [
     {
-      id: 'athena', name: 'Athena', role: 'Research & planning', icon: 'light-bulb', color: 'primary',
+      id: 'athena', name: 'Athena', role: 'Research & planning', icon: 'light-bulb',
       skills: [
         { name: 'Web research', tip: 'Finds, reads and cites reliable sources' },
         { name: 'Planning', tip: 'Breaks big goals into clear steps' },
@@ -23,7 +23,7 @@
       ],
     },
     {
-      id: 'hermes', name: 'Hermes', role: 'Writing & communication', icon: 'envelope', color: 'info',
+      id: 'hermes', name: 'Hermes', role: 'Writing & communication', icon: 'envelope',
       skills: [
         { name: 'Copywriting', tip: 'Drafts emails, posts and documentation' },
         { name: 'Editing', tip: 'Fixes tone, grammar and clarity' },
@@ -31,7 +31,7 @@
       ],
     },
     {
-      id: 'pythagoras', name: 'Pythagoras', role: 'Data & analysis', icon: 'calculator', color: 'success',
+      id: 'pythagoras', name: 'Pythagoras', role: 'Data & analysis', icon: 'calculator',
       skills: [
         { name: 'Data cleaning', tip: 'Tidies messy spreadsheets' },
         { name: 'Statistics', tip: 'Spots trends and outliers' },
@@ -39,7 +39,7 @@
       ],
     },
     {
-      id: 'hephaestus', name: 'Hephaestus', role: 'Code & building', icon: 'wrench-screwdriver', color: 'warning',
+      id: 'hephaestus', name: 'Hephaestus', role: 'Code & building', icon: 'wrench-screwdriver',
       skills: [
         { name: 'Coding', tip: 'Writes HTML, CSS and JavaScript' },
         { name: 'Debugging', tip: 'Tracks down and fixes bugs' },

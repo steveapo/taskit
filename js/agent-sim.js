@@ -1,6 +1,6 @@
 /*
  * agent-sim.js — the "AI" in Taskit is a simulation.
- * run() walks a task To do → In progress → Done on a timer, logging each step.
+ * run() walks a task To do → In progress → Completed on a timer, logging each step.
  * It only talks to Taskit.store, so every open view (table, Kanban, activity feed)
  * updates itself through the usual `taskit:change` event.
  * Ceiling: timers stop if the user leaves the page, so the task stays "In progress";

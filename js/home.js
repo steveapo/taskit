@@ -4,7 +4,7 @@
  *   - the three feature panels (agent picker, task rows, mini board),
  *   - the agents strip.
  * Every store change fires `taskit:change`, and we simply redraw.
- * (The activity feed lives on the Tasks page and the quote on the Agents page.)
+ * (The activity feed lives on the Tasks page.)
  */
 (function (Taskit) {
   'use strict';
@@ -18,11 +18,11 @@
   // How a step reads in the window's "Agent run" log. Other types aren't shown there.
   const STEPS = { started: 'Started', completed: 'Completed', edited: 'Edited', moved: 'Moved' };
   // The word in front of the agent's name in a task row ("Working · Athena").
-  const STATUS_WORD = { todo: 'Queued', 'in-progress': 'Working', done: 'Done' };
+  const STATUS_WORD = { todo: 'Queued', 'in-progress': 'Working', done: 'Completed' };
 
   let focusId = null;      // the task the "Agent run" pane follows once the visitor runs one
   let running = false;     // true while the simulated agent is working
-  let drawnDone = null;    // ids of Done tasks whose check has already drawn (null = first render)
+  let drawnDone = null;    // ids of Completed tasks whose check has already drawn (null = first render)
 
   // All tasks, soonest due first. The window and "Run an agent" share this order.
   function tasksByDue() {
@@ -81,7 +81,7 @@
   }
 
   // The (up to) five rows in "This week": open work first (In progress and To do, by due
-  // date), then Done. The task just run always stays in view, even once it's Done and
+  // date), then Completed. The task just run always stays in view, even once it's Completed and
   // would otherwise fall below the cut, so the visitor sees its check draw.
   function visibleTasks(tasks) {
     const ordered = tasks.filter(t => t.status !== 'done').concat(tasks.filter(t => t.status === 'done'));
@@ -98,12 +98,12 @@
     const list = document.getElementById('week-list');
     const c = store.counts();
     document.getElementById('week-summary').innerHTML =
-      `<span class="mono">${c.pending}</span> open · <span class="mono">${c.done}</span> done`;
+      `<span class="mono">${c.pending}</span> open · <span class="mono">${c.done}</span> completed`;
     if (!tasks.length) {
       list.innerHTML = `<li><a class="link-arrow" href="tasks.html">No tasks yet. Add one ${icon('arrow-right')}</a></li>`;
       return;
     }
-    // A check draws only for tasks that weren't Done last time we drew (and on first load).
+    // A check draws only for tasks that weren't Completed last time we drew (and on first load).
     const doneNow = new Set(tasks.filter(t => t.status === 'done').map(t => t.id));
     // The key cap is aria-hidden so the link's name is just "Add a task…".
     list.innerHTML = visibleTasks(tasks).map(t => taskRow(t, !drawnDone || !drawnDone.has(t.id))).join('') +

@@ -8,7 +8,7 @@
  *   1. Tokens             colours, radii and easing (the single source of truth)
  *   2. Bootstrap mapping  feeds the tokens into Bootstrap's variables
  *   3. Base type          headings, mono, labels, section spacing
- *   4. Components         focus, buttons, links, forms, cards, tables, tooltips, header, footer
+ *   4. Components         focus, buttons, links, forms, tables, tooltips, header, footer
  *   5. Layout patterns    two-tone headings, panels, stages, window, rows, chips, tiles
  *   6. App pages          Tasks, Analytics, Agents: stat strip, pills, composer, table, charts,
  *                         board, agent panels
@@ -92,7 +92,7 @@
   --bs-secondary-bg: var(--tk-surface);             /* .bg-body-secondary, progress track */
   --bs-tertiary-bg: var(--tk-surface);              /* .bg-body-tertiary */
   --bs-border-color: var(--tk-border);              /* every 1px border */
-  --bs-border-color-translucent: var(--tk-border);  /* cards and dropdowns use this one */
+  --bs-border-color-translucent: var(--tk-border);  /* modals and dropdowns use this one */
   --bs-link-color: var(--tk-accent);                /* links are accent... */
   --bs-link-hover-color: var(--tk-text);            /* ...and turn to text colour on hover */
   --bs-primary: var(--tk-accent);                   /* Bootstrap's "primary" is our accent */
@@ -138,7 +138,7 @@ h2, .h2 { font-size: 1.75rem; }
 h3, .h3 { font-size: 1.25rem; }
 h4, .h4, h5, .h5, h6, .h6 { font-size: 1rem; }
 
-/* Bootstrap makes <strong> "bolder" (600 here). Medium is enough to stand out in a calm UI. */
+/* Bootstrap makes <strong> "bolder". Medium is enough to stand out in a calm UI. */
 b, strong { font-weight: 500; }
 
 /* Mono is for data only: dates, ids, counts. "tnum" makes every digit the same width. */
@@ -190,9 +190,8 @@ b, strong { font-weight: 500; }
   --bs-btn-focus-box-shadow: none;
 }
 
-/* Accent button for actions inside the app ("Add task"). .btn-brand is the old name. */
-.btn-primary,
-.btn-brand {
+/* Accent button for actions inside the app ("Add task"). */
+.btn-primary {
   --bs-btn-color: var(--tk-bg);              /* near-white on turquoise / near-black on light turquoise */
   --bs-btn-bg: var(--tk-accent);
   --bs-btn-border-color: var(--tk-accent);
@@ -205,46 +204,6 @@ b, strong { font-weight: 500; }
   --bs-btn-disabled-color: var(--tk-bg);
   --bs-btn-disabled-bg: var(--tk-accent);
   --bs-btn-disabled-border-color: var(--tk-accent);
-}
-
-/* Outlined accent button (the "Run agent" icon button on the Tasks page). */
-.btn-outline-primary {
-  --bs-btn-color: var(--tk-accent);
-  --bs-btn-border-color: var(--tk-accent);
-  --bs-btn-hover-color: var(--tk-bg);
-  --bs-btn-hover-bg: var(--tk-accent);
-  --bs-btn-hover-border-color: var(--tk-accent);
-  --bs-btn-active-color: var(--tk-bg);
-  --bs-btn-active-bg: var(--tk-accent);
-  --bs-btn-active-border-color: var(--tk-accent);
-  --bs-btn-disabled-color: var(--tk-accent);
-  --bs-btn-disabled-border-color: var(--tk-accent);
-}
-
-/* Quiet secondary button: hairline border, text colour, surface fill on hover. */
-.btn-outline-secondary {
-  --bs-btn-color: var(--tk-text);
-  --bs-btn-border-color: var(--tk-border);
-  --bs-btn-hover-color: var(--tk-text);
-  --bs-btn-hover-bg: var(--tk-surface);
-  --bs-btn-hover-border-color: var(--tk-border);
-  --bs-btn-active-color: var(--tk-text);
-  --bs-btn-active-bg: var(--tk-surface);
-  --bs-btn-active-border-color: var(--tk-border);
-  --bs-btn-disabled-color: var(--tk-muted);
-  --bs-btn-disabled-border-color: var(--tk-border);
-}
-
-/* Destructive button: red text and border, filled red on hover. */
-.btn-outline-danger {
-  --bs-btn-color: var(--tk-danger);
-  --bs-btn-border-color: var(--tk-danger);
-  --bs-btn-hover-color: var(--tk-bg);
-  --bs-btn-hover-bg: var(--tk-danger);
-  --bs-btn-hover-border-color: var(--tk-danger);
-  --bs-btn-active-color: var(--tk-bg);
-  --bs-btn-active-bg: var(--tk-danger);
-  --bs-btn-active-border-color: var(--tk-danger);
 }
 
 /* Pill: the main call to action on marketing pages ("Open the board").
@@ -294,7 +253,6 @@ b, strong { font-weight: 500; }
   vertical-align: -0.125em;
   flex-shrink: 0;
 }
-.icon-sm { width: .875em; height: .875em; }
 .icon-lg { width: 1.25em; height: 1.25em; }
 
 /* Arrow link: accent text with a trailing icon (arrow-right, arrow-path...) that nudges
@@ -331,12 +289,6 @@ b, strong { font-weight: 500; }
 .form-control:focus,
 .form-select:focus,
 .form-check-input:focus { border-color: var(--tk-accent); }
-
-/* Cards (other pages, until step 3): just a hairline box, no fill. */
-.card {
-  --bs-card-bg: transparent;
-  --bs-card-border-color: var(--tk-border);
-}
 
 /* Makes the scroll box the "containing block" for the hidden "Actions" header text
    (.visually-hidden is position: absolute). Without it that text escapes the box and
@@ -1072,7 +1024,7 @@ b, strong { font-weight: 500; }
 
 /* ---------- 7. Motion ---------- */
 /* Only opacity and transform move (cheap for the browser), and all of it switches off
-   under "reduce motion" in section 8. */
+   under "reduce motion" in section 10. */
 
 /* Reveal on scroll. layout.js only adds html.js-reveal when the browser supports it and
    the user hasn't asked for less motion. It then marks sections that start below the
