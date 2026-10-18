@@ -3,7 +3,8 @@
  * Loaded in <head> so the saved colour theme is applied before the first paint
  * (no white flash in dark mode). On DOMContentLoaded it injects the one header and
  * footer every page shares, so nav links live in exactly one place.
- * Also hosts the validation helper used by every form on the site.
+ * Also hosts the validation helper used by every form on the site, and the small
+ * observer that fades sections in as they scroll into view (.reveal).
  */
 (function (Taskit) {
   'use strict';
@@ -56,6 +57,32 @@
 
   applyTheme(savedTheme()); // runs immediately, while <head> is still being parsed
 
+  /* ---------- reveal on scroll ---------- */
+
+  // Only switch reveals on when the browser can observe scrolling and the user hasn't
+  // asked for less motion. Without this class the CSS never hides anything.
+  const canReveal = 'IntersectionObserver' in window &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (canReveal) document.documentElement.classList.add('js-reveal');
+
+  // The first report for each .reveal says whether it starts on screen. Sections that
+  // start below the screen are tucked away ("is-waiting") and fade up when scrolled to.
+  // Sections already on screen are never hidden, so nothing can get stuck invisible.
+  function initReveal() {
+    if (!canReveal) return;
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('is-waiting');
+          observer.unobserve(entry.target); // reveal once, then stop watching
+        } else {
+          entry.target.classList.add('is-waiting');
+        }
+      });
+    });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  }
+
   /* ---------- header & footer ---------- */
 
   function currentPage() {
@@ -70,51 +97,59 @@
 
   function headerHtml() {
     const here = currentPage();
-    const pageLabel = (PAGES.find(([href]) => href === here) || PAGES[0])[1];
     const links = PAGES.map(([href, label]) => {
       const active = href === here;
       return `<li class="nav-item"><a class="nav-link${active ? ' active' : ''}" href="${href}"${active ? ' aria-current="page"' : ''}>${label}</a></li>`;
     }).join('');
     return `
       <a class="visually-hidden-focusable position-absolute z-3 p-2 bg-body" href="#main">Skip to main content</a>
-      <nav class="navbar navbar-expand-lg border-bottom" aria-label="Main navigation">
+      <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
         <div class="container">
-          <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="index.html">
-            ${LOGO_SVG}
-            Taskit <span class="fw-normal text-body-secondary d-none d-sm-inline">· ${pageLabel}</span>
-          </a>
+          <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">${LOGO_SVG} Taskit</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
                   aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="main-nav">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">${links}</ul>
-            <button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false"
-                    class="theme-toggle btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center p-0 ms-lg-3 mb-2 mb-lg-0">
-              <i class="bi bi-moon-stars" aria-hidden="true"></i>
-            </button>
+            <ul class="navbar-nav me-auto ms-lg-3 mb-2 mb-lg-0">${links}</ul>
+            <div class="d-flex align-items-center gap-2 mb-2 mb-lg-0">
+              <button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false"
+                      class="theme-toggle btn btn-sm d-inline-flex align-items-center justify-content-center p-0">
+                <i class="bi bi-moon-stars" aria-hidden="true"></i>
+              </button>
+              <a class="btn btn-pill btn-sm d-none d-lg-inline-flex" href="tasks.html">Open board</a>
+            </div>
           </div>
         </div>
       </nav>`;
   }
 
+  // One footer column: a small label, then a plain list of links to existing pages.
+  function footerColumn(title, hrefs) {
+    const links = hrefs.map(href => {
+      const [, label] = PAGES.find(([h]) => h === href);
+      return `<li><a href="${href}">${label}</a></li>`;
+    }).join('');
+    return `<h2 class="label mb-3">${title}</h2><ul class="footer-links">${links}</ul>`;
+  }
+
   function footerHtml() {
     return `
-      <div class="container py-4">
-        <div class="row gy-3 align-items-center">
-          <div class="col-md-4">
-            <a href="index.html" class="d-inline-flex align-items-center gap-2 fw-semibold text-body text-decoration-none">
-              ${LOGO_SVG} Taskit
-            </a>
+      <div class="container py-5">
+        <div class="row gy-4">
+          <div class="col-12 col-lg-4">
+            <a href="index.html" class="footer-brand d-inline-flex align-items-center gap-2">${LOGO_SVG} Taskit</a>
             <p class="mb-0 mt-2">A demo project. The AI agents are simulated.</p>
           </div>
-          <div class="col-md-4">
-            <a href="mailto:hello@taskit.example">hello@taskit.example</a><br>
-            Athens, Greece
+          <div class="col-6 col-lg-2">${footerColumn('Product', ['tasks.html', 'analytics.html', 'agents.html'])}</div>
+          <div class="col-6 col-lg-2">${footerColumn('Company', ['about.html', 'contact.html'])}</div>
+          <div class="col-12 col-lg-4">
+            <h2 class="label mb-3">Contact</h2>
+            <p class="mb-2"><a href="mailto:hello@taskit.example">hello@taskit.example</a><br>Athens, Greece</p>
+            <div>${socialLinksHtml('fs-6')}</div>
           </div>
-          <div class="col-md-4 text-md-end">${socialLinksHtml()}</div>
         </div>
-        <p class="text-center mt-4 mb-0">&copy; ${new Date().getFullYear()} Taskit. All rights reserved.</p>
+        <p class="mt-5 mb-0">&copy; ${new Date().getFullYear()} Taskit. All rights reserved.</p>
       </div>`;
   }
 
@@ -159,12 +194,13 @@
       header.innerHTML = headerHtml();
     }
     if (footer) {
-      footer.className = 'site-footer border-top mt-5';
+      footer.className = 'site-footer mt-5';
       footer.innerHTML = footerHtml();
     }
     applyTheme(document.documentElement.getAttribute('data-bs-theme')); // sync the new button's icon
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
     if (Taskit.store && !Taskit.store.persistent) showStorageWarning();
+    initReveal();
   });
 
   Taskit.layout = { validateForm, socialLinksHtml };
