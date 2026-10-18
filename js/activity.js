@@ -8,6 +8,7 @@
   'use strict';
 
   const { store } = Taskit;
+  const { agentName } = Taskit.ui; // "Athena", or "An agent" if the id is unknown
   const esc = store.escapeHtml;
 
   // How each activity type reads in the feed: [icon name, sentence builder]
@@ -30,11 +31,6 @@
       if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
     }
     return 'just now';
-  }
-
-  function agentName(id) {
-    const agent = store.agentById(id);
-    return agent ? agent.name : 'An agent';
   }
 
   // Draws the newest `limit` entries into `listEl`. Returns the newest entry as plain text

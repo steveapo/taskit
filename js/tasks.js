@@ -8,18 +8,9 @@
 (function (Taskit) {
   'use strict';
 
-  const { store, layout, sim, icon } = Taskit;
+  const { store, layout, sim, icon, ui } = Taskit;
   const esc = store.escapeHtml;
   const $ = id => document.getElementById(id);
-
-  // How each status and priority reads in the table. The word is always shown, so the
-  // icon or dot next to it is only a visual aid (colour is never the only signal).
-  const STATUS_WORD = { todo: 'To do', 'in-progress': 'In progress', done: 'Completed' };
-  const PRIORITY_WORD = { high: 'High', medium: 'Medium', low: 'Low' };
-
-  // "20 Oct" for the table, and "20 October 2026" for the tooltip, which also shows the year.
-  const shortDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
-  const longDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const form = $('task-form');
   // The toolbar's starting state. "Clear the filters" puts every control back to this.
@@ -37,36 +28,7 @@
       .map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join(''));
   }
 
-  /* ---------- table ---------- */
-
-  // A <time> element: short text, full date as a tooltip. "T00:00" makes the date parse
-  // in local time, not UTC (which could be a day off).
-  function dueHtml(iso) {
-    const date = new Date(iso + 'T00:00');
-    // A broken saved date (e.g. "2026-13-45") would make format() throw: show it as it is.
-    if (isNaN(date)) return `<span class="mono">${esc(iso)}</span>`;
-    return `<time class="mono" datetime="${esc(iso)}" title="${longDate.format(date)}">${shortDate.format(date)}</time>`;
-  }
-
-  // Priority as shape plus word: coral dot (High), amber dot (Medium), hollow grey ring (Low).
-  function priorityHtml(priority) {
-    const key = PRIORITY_WORD[priority] ? priority : 'medium';
-    return `<span class="prio"><span class="prio-dot is-${key}" aria-hidden="true"></span>${PRIORITY_WORD[key]}</span>`;
-  }
-
-  // Status as icon plus word, with the same icons as the Home page: a hollow circle (To do),
-  // the pulsing dot (In progress) and the check (Completed). `drawCheck` makes the check
-  // draw itself; it is only true on the render where the task has just become Completed.
-  function statusHtml(status, drawCheck) {
-    let iconHtml = '<span class="row-icon is-todo" aria-hidden="true"></span>';
-    if (status === 'in-progress') {
-      iconHtml = '<span class="row-icon is-working" aria-hidden="true"><span class="dot-working"></span></span>';
-    } else if (status === 'done') {
-      iconHtml = `<span class="row-icon" aria-hidden="true"><svg class="check-draw${drawCheck ? ' is-new' : ''}" viewBox="0 0 16 16">
-        <circle cx="8" cy="8" r="8"/><path d="M4.75 8.25l2.25 2.25 4.25-4.5" pathLength="1"/></svg></span>`;
-    }
-    return `<span class="status">${iconHtml}${STATUS_WORD[status] || STATUS_WORD.todo}</span>`;
-  }
+  /* ---------- table (the date, priority and status cells come from js/ui.js) ---------- */
 
   // A small ghost icon button. `label` is already escaped by the caller.
   function actionButton(action, id, iconName, label, disabled, extraClass = '') {
@@ -75,7 +37,6 @@
   }
 
   function rowHtml(t) {
-    const agent = store.agentById(t.agentId);
     const done = t.status === 'done';
     const justDone = done && doneBefore !== null && !doneBefore.has(t.id); // was it Completed last time?
     const classes = ['task-row'];
@@ -88,10 +49,10 @@
           <span class="task-name">${name}</span>
           <span class="task-detail">${esc(t.description)}</span>
         </td>
-        <td class="text-nowrap">${esc(agent ? agent.name : 'Unassigned')}</td>
-        <td class="text-nowrap">${dueHtml(t.dueDate)}</td>
-        <td class="text-nowrap">${priorityHtml(t.priority)}</td>
-        <td class="text-nowrap">${statusHtml(t.status, justDone)}</td>
+        <td class="text-nowrap">${esc(ui.agentName(t.agentId, 'Unassigned'))}</td>
+        <td class="text-nowrap">${ui.dueHtml(t.dueDate)}</td>
+        <td class="text-nowrap">${ui.priorityHtml(t.priority)}</td>
+        <td class="text-nowrap">${ui.statusHtml(t.status, justDone)}</td>
         <td class="text-nowrap text-end">
           ${actionButton('run', id, 'play', `Run agent on ${name}`, t.status !== 'todo')}
           ${actionButton('complete', id, 'check', `Mark ${name} as completed`, done)}
@@ -113,10 +74,7 @@
   function render() {
     const all = store.getTasks();
     const shown = store.applyView(all, view);
-    const c = store.counts();
-    $('count-total').textContent = c.total;
-    $('count-pending').textContent = c.pending;
-    $('count-done').textContent = c.done;
+    ui.renderCounts(store.counts());
     $('table-caption').textContent = `Showing ${shown.length} of ${all.length} tasks`;
     $('task-rows').innerHTML = shown.length ? shown.map(rowHtml).join('') : emptyRowHtml(all.length > 0);
     // Remember which tasks are Completed now, so a check only draws once, when it changes.

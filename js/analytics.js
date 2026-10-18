@@ -8,32 +8,16 @@
 (function (Taskit) {
   'use strict';
 
-  const { store, icon } = Taskit;
+  const { store, icon, ui } = Taskit;
+  const { COLUMNS, PRIORITIES } = ui; // [value, word] pairs, e.g. ['done', 'Completed']
   const esc = store.escapeHtml;
   const $ = id => document.getElementById(id);
-  const COLUMNS = [['todo', 'To do'], ['in-progress', 'In progress'], ['done', 'Completed']];
-  const PRIORITIES = [['high', 'High'], ['medium', 'Medium'], ['low', 'Low']];
-  const PRIORITY_WORD = { high: 'High', medium: 'Medium', low: 'Low' };
-  // "20 Oct", the same short date as the Tasks table. "T00:00" parses it in local time.
-  const shortDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
   const board = $('board');
-
-  // "20 Oct", or the saved text as it is if it isn't a real date (format() would throw).
-  function dueText(iso) {
-    const date = new Date(iso + 'T00:00');
-    return isNaN(date) ? esc(iso) : shortDate.format(date);
-  }
 
   // Whole-number share of the total, e.g. 2 of 6 → 33. Zero when there are no tasks.
   const percent = (n, total) => (total ? Math.round((n / total) * 100) : 0);
 
-  /* ---------- counts and charts ---------- */
-
-  function renderCounts(c) {
-    $('count-total').textContent = c.total;
-    $('count-pending').textContent = c.pending;
-    $('count-done').textContent = c.done;
-  }
+  /* ---------- charts (the counts above them come from ui.renderCounts) ---------- */
 
   // Completed vs pending: one row per bar. Label, a thin track with the fill, then the
   // count and the percentage. The chart is role="img", so its aria-label carries the numbers.
@@ -63,9 +47,9 @@
       : 'Tasks by priority: no tasks yet');
     // The legend uses the same shapes as the Tasks table: coral dot, amber dot, grey ring.
     $('priority-legend').innerHTML = c.total
-      ? PRIORITIES.map(([key, label]) => `
+      ? PRIORITIES.map(([key]) => `
           <li>
-            <span class="prio"><span class="prio-dot is-${key}" aria-hidden="true"></span>${label}</span>
+            ${ui.priorityHtml(key)}
             <span class="mono">${c[key]}</span>
             <span class="mono text-body-secondary">${percent(c[key], c.total)}%</span>
           </li>`).join('')
@@ -89,16 +73,14 @@
   // "Athena · 20 Oct · ● High", then the move menu. The hidden words make the meta
   // line read "due 20 Oct" and "High priority" to screen readers.
   function cardHtml(t) {
-    const agent = store.agentById(t.agentId);
     const id = esc(t.id);
-    const key = PRIORITY_WORD[t.priority] ? t.priority : 'medium';
     const working = t.status === 'in-progress' ? '<span class="dot-working" aria-hidden="true"></span>' : '';
     return `<article class="board-card${t.status === 'done' ? ' is-done' : ''}" draggable="true" data-id="${id}">
         <h4 class="board-card-title">${working}<span>${esc(t.name)}</span></h4>
         <p class="board-card-meta">
-          <span>${esc(agent ? agent.name : 'Unassigned')}</span>
-          <span><span class="visually-hidden">due </span><time class="mono" datetime="${esc(t.dueDate)}">${dueText(t.dueDate)}</time></span>
-          <span><span class="prio"><span class="prio-dot is-${key}" aria-hidden="true"></span>${PRIORITY_WORD[key]}<span class="visually-hidden"> priority</span></span></span>
+          <span>${esc(ui.agentName(t.agentId, 'Unassigned'))}</span>
+          <span><span class="visually-hidden">due </span>${ui.dueHtml(t.dueDate)}</span>
+          <span>${ui.priorityHtml(t.priority)}<span class="visually-hidden"> priority</span></span>
         </p>
         ${moveSelectHtml(t, id)}
       </article>`;
@@ -157,7 +139,7 @@
 
   function render() {
     const c = store.counts();
-    renderCounts(c);
+    ui.renderCounts(c);
     renderBars(c);
     renderPriority(c);
     renderBoard();

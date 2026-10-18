@@ -10,7 +10,8 @@
   'use strict';
 
   const { store, sim } = Taskit;
-  const { icon, activity } = Taskit;
+  const { icon, activity, ui } = Taskit;
+  const { agentName, COLUMNS } = ui; // shared with the Tasks and Analytics pages
   const esc = store.escapeHtml;
   const timeAgo = activity.timeAgo; // "5 minutes ago", shared with the Tasks page feed
 
@@ -18,16 +19,10 @@
   const STEPS = { started: 'Started', completed: 'Completed', edited: 'Edited', moved: 'Moved' };
   // The word in front of the agent's name in a task row ("Working · Athena").
   const STATUS_WORD = { todo: 'Queued', 'in-progress': 'Working', done: 'Done' };
-  const COLUMNS = [['todo', 'To do'], ['in-progress', 'In progress'], ['done', 'Completed']];
 
   let focusId = null;      // the task the "Agent run" pane follows once the visitor runs one
   let running = false;     // true while the simulated agent is working
   let drawnDone = null;    // ids of Done tasks whose check has already drawn (null = first render)
-
-  function agentName(id) {
-    const agent = store.agentById(id);
-    return agent ? agent.name : 'An agent';
-  }
 
   // All tasks, soonest due first. The window and "Run an agent" share this order.
   function tasksByDue() {
@@ -36,22 +31,11 @@
 
   /* ---------- small HTML builders ---------- */
 
-  // The 14px status icon: hollow circle (To do), pulsing dot (In progress), check (Done).
-  // `isNew` makes the check draw itself; only used the first time a task shows as Done.
-  function statusIcon(status, isNew) {
-    if (status === 'in-progress') return '<span class="row-icon is-working" aria-hidden="true"><span class="dot-working"></span></span>';
-    if (status === 'done') {
-      return `<span class="row-icon" aria-hidden="true"><svg class="check-draw${isNew ? ' is-new' : ''}" viewBox="0 0 16 16">
-        <circle cx="8" cy="8" r="8"/><path d="M4.75 8.25l2.25 2.25 4.25-4.5" pathLength="1"/></svg></span>`;
-    }
-    return '<span class="row-icon is-todo" aria-hidden="true"></span>';
-  }
-
-  // One task row: icon, name, then "Working · Athena". The words carry the status,
-  // so the icon is decoration for screen readers.
+  // One task row: icon (from js/ui.js), name, then "Working · Athena". The words carry the
+  // status, so the icon is decoration for screen readers. `isNew` makes a check draw itself.
   function taskRow(task, isNew) {
     return `<li class="${task.status === 'done' ? 'row-done' : ''}">
-        ${statusIcon(task.status, isNew)}
+        ${ui.statusIcon(task.status, isNew)}
         <span class="row-main">${esc(task.name)}
           <span class="row-meta">${STATUS_WORD[task.status]} · ${esc(agentName(task.agentId))}</span></span>
       </li>`;
@@ -93,7 +77,7 @@
         <li><span class="step-dot" aria-hidden="true"></span>Assigned · ${esc(agentName(task.agentId))}</li>
         ${steps}${live}
       </ol>
-      <span class="chip">${icon('calendar-days')}due ${esc(task.dueDate)}</span>`;
+      <span class="chip">${icon('calendar-days')}due ${ui.shortDate(task.dueDate)}</span>`;
   }
 
   // The (up to) five rows in "This week": open work first (In progress and To do, by due
