@@ -33,6 +33,12 @@
   --tk-text: oklch(22% 0.012 215);      /* body text, near-black */
   --tk-accent: oklch(43% 0.076 215);    /* turquoise (hex 005A6A): links, primary action, focus */
   --tk-danger: oklch(52% 0.17 25);      /* red: only for destructive actions */
+  /* Priority dots (and the priority chart). A soft coral and an amber, used only on the
+     small dot and the bar segments; the word next to them carries the meaning. Each is at
+     least 3:1 on bg, surface and stage (the minimum for a graphic). The coral is lighter,
+     less saturated and more orange than --tk-danger: "urgent" is not "destroys something". */
+  --tk-prio-high: oklch(58% 0.15 30);   /* coral red, 3.98:1 on stage (the darkest) */
+  --tk-prio-medium: oklch(62% 0.13 70); /* amber, 3.24:1 on stage */
 
   /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
   --tk-bg-rgb: 248, 251, 251;
@@ -59,6 +65,8 @@
   --tk-text: oklch(94% 0.004 215);      /* body text, off-white */
   --tk-accent: oklch(78% 0.075 215);    /* lighter, calmer turquoise so it reads on dark */
   --tk-danger: oklch(70% 0.15 25);      /* lighter red for the same reason */
+  --tk-prio-high: oklch(72% 0.12 30);   /* calmer coral, 6.79:1 on surface (the lightest) */
+  --tk-prio-medium: oklch(80% 0.12 78); /* amber, 9.35:1 on surface */
 
   /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
   --tk-bg-rgb: 13, 16, 17;
@@ -892,9 +900,9 @@ b, strong { font-weight: 500; }
 .prio { display: inline-flex; align-items: center; gap: .5rem; }
 .status .row-icon { margin-top: 0; }
 .prio-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; }
-.prio-dot.is-high { background-color: var(--tk-text); }     /* filled, strongest */
-.prio-dot.is-medium { background-color: var(--tk-muted); }  /* filled, softer */
-.prio-dot.is-low { border: 1.5px solid var(--tk-muted); }   /* hollow ring */
+.prio-dot.is-high { background-color: var(--tk-prio-high); }     /* filled coral */
+.prio-dot.is-medium { background-color: var(--tk-prio-medium); } /* filled amber */
+.prio-dot.is-low { border: 1.5px solid var(--tk-muted); }        /* hollow grey ring */
 
 /* Small ghost icon button (the row actions): muted icon, a hairline box on hover. */
 .btn-icon {
@@ -945,8 +953,8 @@ b, strong { font-weight: 500; }
 .seg-bar { display: flex; gap: 2px; height: 12px; margin-top: 1.25rem; }
 .seg-bar:empty { border-radius: 6px; background-color: var(--tk-border); } /* no tasks: an empty track */
 .seg { flex-basis: 0; min-width: 12px; border-radius: 6px; }
-.seg.is-high { background-color: var(--tk-text); }
-.seg.is-medium { background-color: var(--tk-muted); }
+.seg.is-high { background-color: var(--tk-prio-high); }     /* same colours as the dots */
+.seg.is-medium { background-color: var(--tk-prio-medium); }
 .seg.is-low { background-color: var(--tk-border); border: 1px solid var(--tk-muted); }
 /* Legend under it: shape and word | count | percentage. */
 .legend { list-style: none; margin: 1rem 0 0; padding: 0; }

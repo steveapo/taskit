@@ -61,7 +61,7 @@
     bar.setAttribute('aria-label', c.total
       ? 'Tasks by priority: ' + PRIORITIES.map(([key, label]) => `${label} ${c[key]} (${percent(c[key], c.total)}%)`).join(', ')
       : 'Tasks by priority: no tasks yet');
-    // The legend uses the same shapes as the Tasks table: filled dot, muted dot, ring.
+    // The legend uses the same shapes as the Tasks table: coral dot, amber dot, grey ring.
     $('priority-legend').innerHTML = c.total
       ? PRIORITIES.map(([key, label]) => `
           <li>

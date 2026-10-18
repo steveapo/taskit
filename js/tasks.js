@@ -48,7 +48,7 @@
     return `<time class="mono" datetime="${esc(iso)}" title="${longDate.format(date)}">${shortDate.format(date)}</time>`;
   }
 
-  // Priority as shape plus word: filled dot (High), muted dot (Medium), hollow ring (Low).
+  // Priority as shape plus word: coral dot (High), amber dot (Medium), hollow grey ring (Low).
   function priorityHtml(priority) {
     const key = PRIORITY_WORD[priority] ? priority : 'medium';
     return `<span class="prio"><span class="prio-dot is-${key}" aria-hidden="true"></span>${PRIORITY_WORD[key]}</span>`;
