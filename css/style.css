@@ -8,9 +8,10 @@
  *   1. Tokens             colours, radii and easing (the single source of truth)
  *   2. Bootstrap mapping  feeds the tokens into Bootstrap's variables
  *   3. Base type          headings, mono, labels, section spacing
- *   4. Components         focus, buttons, links, forms, cards, tables, badges, header, footer
+ *   4. Components         focus, buttons, links, forms, cards, tables, badges, tooltips, header, footer
  *   5. Layout patterns    two-tone headings, panels, stages, window, rows, chips, tiles
- *   6. App pages          Tasks and Analytics: stat strip, pills, composer, table, charts, board
+ *   6. App pages          Tasks, Analytics, Agents: stat strip, pills, composer, table, charts,
+ *                         board, agent panels
  *   7. Motion             reveal on scroll, working dot, self-drawing check, new-row flash
  *   8. Page widgets       older pieces the other pages still use (restyled in step 3)
  *   9. Reduced motion
@@ -349,6 +350,20 @@ b, strong { font-weight: 500; }
   border: 1px solid var(--tk-border);
 }
 
+/* Tooltips (only the Agents page uses them): a box in the text colour with page-colour
+   text, so it flips with the theme. Bootstrap's 90% opacity and arrow are dropped. */
+.tooltip {
+  --bs-tooltip-bg: var(--tk-text);
+  --bs-tooltip-color: var(--tk-bg);
+  --bs-tooltip-font-size: .75rem;
+  --bs-tooltip-border-radius: var(--tk-radius);
+  --bs-tooltip-padding-x: .5rem;
+  --bs-tooltip-padding-y: .3125rem;
+  --bs-tooltip-opacity: 1;
+  font-family: var(--bs-body-font-family); /* Bootstrap gives tooltips the system font */
+}
+.tooltip .tooltip-arrow { display: none; }
+
 /* Shared header: a thin bar with a solid background so the page doesn't show through
    while it sticks, closed off by a hairline. */
 .site-header {
@@ -452,6 +467,8 @@ b, strong { font-weight: 500; }
 }
 /* The big one under the hero. Padding grows with the screen so the window floats. */
 .stage-hero { min-height: 28rem; padding: clamp(.75rem, 4vw, 3.5rem); }
+/* A small one, only as tall as what it holds (the skills list on the Agents page). */
+.stage-compact { min-height: 0; }
 
 /* Window: a fake app window, live from the store (built by home.js). */
 .window {
@@ -677,13 +694,7 @@ b, strong { font-weight: 500; }
 .mini-card::after { content: ""; height: 4px; width: 70%; border-radius: 2px; background-color: var(--tk-border); }
 .mini-more { font-size: .75rem; color: var(--tk-muted); }
 
-/* Quote row: label, quote, button side by side from 768px, stacked on phones. */
-.quote-panel { display: grid; gap: .75rem; align-items: baseline; }
-@media (min-width: 768px) {
-  .quote-panel { grid-template-columns: 14rem minmax(0, 1fr) auto; gap: 1.5rem; }
-}
-
-/* ---------- 6. App pages: Tasks and Analytics ---------- */
+/* ---------- 6. App pages: Tasks, Analytics and Agents ---------- */
 
 /* Stat strip: three numbers side by side, split by hairlines instead of boxed in cards.
    It is a <dl>: each .stat holds a <dt> label and a <dd> number. */
@@ -1014,6 +1025,47 @@ b, strong { font-weight: 500; }
 .pill-ghost { height: 1.75rem; margin-left: -.5rem; padding: 0 .5rem; border-color: transparent; }
 .pill-ghost .pill-select { color: var(--tk-muted); }
 
+/* Agents page: one .panel per agent. */
+/* Top row: icon square | name with the role under it | Working or Idle, pushed right. */
+.agent-head { display: flex; align-items: center; gap: .75rem; }
+.agent-name { flex: 1 1 auto; min-width: 0; }
+.agent-role { margin: 0; font-size: .8125rem; color: var(--tk-muted); }
+/* The agent's icon in a small square: a hairline and the small radius, no colour fill. */
+.agent-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.125rem; /* the icon is 1em, so this sets its size */
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+}
+.agent-state { font-size: .8125rem; white-space: nowrap; }
+.agent-state.is-idle { color: var(--tk-muted); }
+/* "2 of 3 completed · 67%", small and muted, just above the bar. */
+.agent-count { margin: 1.25rem 0 .5rem; font-size: .75rem; color: var(--tk-muted); }
+/* Bootstrap's progress bar, made thin through its own variables: a 4px track in the
+   hairline colour and a fill in the text colour, like the bars on the Analytics page. */
+.agent-progress {
+  --bs-progress-height: 4px;
+  --bs-progress-bg: var(--tk-border);
+  --bs-progress-border-radius: 2px;
+  --bs-progress-bar-bg: var(--tk-text);
+}
+/* Bootstrap's list group, re-coloured through its variables into our row style: no fill,
+   hairlines between rows (list-group-flush already drops the outer border). */
+.skill-list {
+  --bs-list-group-bg: transparent;
+  --bs-list-group-color: var(--tk-text);
+  --bs-list-group-border-color: var(--tk-border);
+  --bs-list-group-item-padding-x: .5rem;
+  --bs-list-group-item-padding-y: .25rem;
+}
+/* Skill name on the left, the info button on the right. */
+.skill-list .list-group-item { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.agent-link { margin-top: 1.25rem; }
+
 /* ---------- 7. Motion ---------- */
 /* Only opacity and transform move (cheap for the browser), and all of it switches off
    under "reduce motion" in section 8. */
@@ -1065,21 +1117,6 @@ b, strong { font-weight: 500; }
 }
 
 .text-brand { color: var(--tk-accent) !important; }
-
-/* Agent icon tile. The page still adds a text-bg-* class, so the fill is forced off. */
-.agent-avatar {
-  width: 2.5rem;
-  height: 2.5rem;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  border: 1px solid var(--tk-border);
-  border-radius: var(--tk-radius);
-  background-color: transparent !important;
-  color: var(--tk-text) !important;
-}
 
 /* Testimonials: a surface panel with a hairline, in the normal text colour. */
 .testimonial-carousel {

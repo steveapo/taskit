@@ -1,17 +1,19 @@
 /*
  * agents.js — Agents page (the "page of choice").
- * Shows a card for each simulated agent with live stats from the task store:
- * a Working/Idle badge, a progress bar of completed vs assigned tasks, and a
- * skills list group with Bootstrap tooltips. Under the cards sits the "Agent thought
- * of the day" quote, which comes from a public API (see js/quote.js).
+ * Draws one panel per simulated agent with live stats from the task store:
+ * Working or Idle, a Bootstrap progress bar of completed vs assigned tasks, and the
+ * skills as a Bootstrap list group, each with a Bootstrap tooltip that explains it.
+ * Those three components (progress, list group, tooltip) are used on this page only.
  */
 (function (Taskit) {
   'use strict';
 
-  const { store } = Taskit;
+  const { store, icon } = Taskit;
   const esc = store.escapeHtml;
   const grid = document.getElementById('agent-grid');
 
+  // How much of an agent's work is done: counts, a whole percentage, and whether
+  // any of its tasks is in progress right now.
   function statsFor(agentId, tasks) {
     const mine = tasks.filter(t => t.agentId === agentId);
     const done = mine.filter(t => t.status === 'done').length;
@@ -23,35 +25,54 @@
     };
   }
 
-  function cardHtml(agent, s) {
-    const skills = agent.skills.map(skill =>
-      `<li class="list-group-item px-0">
-         <span tabindex="0" data-bs-toggle="tooltip" data-bs-title="${esc(skill.tip)}">
-           ${esc(skill.name)} ${Taskit.icon('information-circle', 'text-body-secondary')}
-         </span>
-       </li>`).join('');
-    return `<div class="col">
-        <article class="card h-100 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <span class="agent-avatar text-bg-${agent.color}">${Taskit.icon(agent.icon)}</span>
-              <div class="flex-grow-1">
-                <h2 class="h5 mb-0">${esc(agent.name)}</h2>
-                <p class="small text-body-secondary mb-0">${esc(agent.role)}</p>
-              </div>
-              <span class="badge ${s.working ? 'text-bg-warning' : 'text-bg-secondary'}">${s.working ? 'Working' : 'Idle'}</span>
+  // Working: the pulsing accent dot plus the word. Idle: just the word, muted.
+  // The word is always there, so the colour is never the only signal.
+  function stateHtml(working) {
+    return working
+      ? '<span class="status agent-state"><span class="dot-working" aria-hidden="true"></span>Working</span>'
+      : '<span class="status agent-state is-idle">Idle</span>';
+  }
+
+  // One skill row: the name, then a small info button. The button is the tooltip's
+  // trigger, so it can be reached with Tab (Bootstrap shows tooltips on hover and focus).
+  // Its aria-label names it; Bootstrap links the tip text to it with aria-describedby.
+  function skillHtml(skill) {
+    const name = esc(skill.name);
+    return `<li class="list-group-item">
+        <span>${name}</span>
+        <button type="button" class="btn btn-icon" data-bs-toggle="tooltip" data-bs-title="${esc(skill.tip)}"
+                aria-label="What ${name} covers">${icon('information-circle')}</button>
+      </li>`;
+  }
+
+  function panelHtml(agent, s) {
+    const id = esc(agent.id);
+    const name = esc(agent.name);
+    // "2 of 3 completed · 67%" above the bar; the same facts in words for screen readers.
+    const count = s.total ? `${s.done} of ${s.total} completed · ${s.percent}%` : 'No tasks yet · 0%';
+    const spoken = s.total ? `${s.done} of ${s.total} tasks completed` : 'No tasks assigned yet';
+    return `<div class="col-md-6">
+        <article class="panel" aria-labelledby="agent-${id}">
+          <div class="agent-head">
+            <span class="agent-avatar" aria-hidden="true">${icon(agent.icon)}</span>
+            <div class="agent-name">
+              <h2 id="agent-${id}" class="panel-title mb-0">${name}</h2>
+              <p class="agent-role">${esc(agent.role)}</p>
             </div>
-            <p class="small mb-1">${s.done} of ${s.total} tasks completed</p>
-            <div class="progress mb-3" role="progressbar" aria-label="${esc(agent.name)} task completion"
-                 aria-valuenow="${s.percent}" aria-valuemin="0" aria-valuemax="100">
-              <div class="progress-bar text-bg-${agent.color}" style="width: ${s.percent}%">${s.percent}%</div>
+            ${stateHtml(s.working)}
+          </div>
+          <p class="agent-count mono">${count}</p>
+          <div class="progress agent-progress" role="progressbar" aria-label="${name}: tasks completed"
+               aria-valuenow="${s.percent}" aria-valuemin="0" aria-valuemax="100" aria-valuetext="${spoken}">
+            <div class="progress-bar" style="width: ${s.percent}%"></div>
+          </div>
+          <div class="stage stage-compact">
+            <div class="fragment">
+              <p class="picker-head mb-0">Skills</p>
+              <ul class="list-group list-group-flush skill-list">${agent.skills.map(skillHtml).join('')}</ul>
             </div>
-            <h3 class="h6">Skills</h3>
-            <ul class="list-group list-group-flush">${skills}</ul>
           </div>
-          <div class="card-footer bg-transparent">
-            <a class="btn btn-sm btn-outline-secondary" href="tasks.html">Assign a task</a>
-          </div>
+          <a class="link-arrow agent-link" href="tasks.html">Assign a task ${icon('arrow-right')}</a>
         </article>
       </div>`;
   }
@@ -63,17 +84,21 @@
       if (tip) tip.dispose();
     });
     const tasks = store.getTasks();
-    grid.innerHTML = store.AGENTS.map(agent => cardHtml(agent, statsFor(agent.id, tasks))).join('');
+    grid.innerHTML = store.AGENTS.map(agent => panelHtml(agent, statsFor(agent.id, tasks))).join('');
     // Bootstrap tooltips are opt-in, so each one has to be created in JS.
     grid.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
   }
 
-  // "Agent thought of the day" (the API feature) lives under the cards; js/quote.js does the fetching.
-  const quoteBox = document.getElementById('quote');
-  const quoteButton = document.getElementById('new-quote');
-  quoteButton.addEventListener('click', () => Taskit.quote.load(quoteBox, quoteButton));
+  // Escape closes an open tooltip without moving the mouse or the focus (WCAG 1.4.13).
+  // Bootstrap's tooltips don't do this on their own.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    grid.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+      const tip = bootstrap.Tooltip.getInstance(el);
+      if (tip) tip.hide();
+    });
+  });
 
   document.addEventListener('taskit:change', render);
   render();
-  Taskit.quote.load(quoteBox, quoteButton);
 })(window.Taskit);
