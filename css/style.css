@@ -850,6 +850,10 @@ b, strong { font-weight: 500; }
 }
 .task-table > :not(caption) > * > * { padding: .75rem; font-size: .875rem; }
 .task-table > thead th { padding-block: .5rem; font-size: .75rem; white-space: nowrap; }
+/* Tablets: tighter sides so all six columns, actions included, fit without scrolling. */
+@media (max-width: 991.98px) {
+  .task-table > :not(caption) > * > * { padding-inline: .5rem; }
+}
 .task-table caption { padding: .75rem 0 0; font-size: .8125rem; color: var(--tk-muted); }
 .task-cell { min-width: 13rem; max-width: 32rem; }
 .task-name { display: block; font-size: 1rem; }  /* the name is the one thing in a row at full size */
@@ -891,6 +895,114 @@ b, strong { font-weight: 500; }
 /* Delete turns red when you point at it or tab to it: red means "this destroys something". */
 .btn-icon-danger:hover,
 .btn-icon-danger:focus-visible { --bs-btn-color: var(--tk-danger); --bs-btn-hover-color: var(--tk-danger); }
+
+/* Analytics charts. Both are lists of rows split by hairlines, like the rest of the site. */
+/* Completed vs pending: each row is label | thin track with its fill | count and percentage. */
+.hbars { margin-top: .5rem; }
+.hbar {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 5.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: .75rem 0;
+  border-top: 1px solid var(--tk-border);
+}
+.hbar:first-child { border-top: 0; }
+.hbar-track { height: 6px; overflow: hidden; border-radius: 3px; background-color: var(--tk-border); }
+.hbar-fill { display: block; height: 100%; border-radius: 3px; } /* width is set inline by analytics.js */
+.hbar-fill.is-done { background-color: var(--tk-text); }
+.hbar-fill.is-pending { background-color: var(--tk-muted); }
+.hbar-value { display: flex; justify-content: flex-end; gap: .75rem; font-size: .875rem; }
+
+/* By priority: one bar split into rounded segments with 2px gaps. analytics.js sets each
+   segment's flex-grow to its count, so the widths follow the counts. */
+.seg-bar { display: flex; gap: 2px; height: 12px; margin-top: 1.25rem; }
+.seg-bar:empty { border-radius: 6px; background-color: var(--tk-border); } /* no tasks: an empty track */
+.seg { flex-basis: 0; min-width: 12px; border-radius: 6px; }
+.seg.is-high { background-color: var(--tk-text); }
+.seg.is-medium { background-color: var(--tk-muted); }
+.seg.is-low { background-color: var(--tk-border); border: 1px solid var(--tk-muted); }
+/* Legend under it: shape and word | count | percentage. */
+.legend { list-style: none; margin: 1rem 0 0; padding: 0; }
+.legend li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 3.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: .5rem 0;
+  font-size: .875rem;
+  border-top: 1px solid var(--tk-border);
+}
+.legend li:first-child { border-top: 0; }
+.legend li > :last-child { text-align: right; }
+.legend .legend-empty { display: block; color: var(--tk-muted); }
+
+/* Kanban board: three recessed columns (like a .stage) holding raised cards.
+   One column under another on phones, three side by side from 768px. */
+.board { display: grid; gap: .75rem; }
+@media (min-width: 768px) {
+  .board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.board-col {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-height: 16rem;
+  padding: .5rem;
+  background-color: var(--tk-stage);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+/* The column a card is being dragged over. */
+.board-col.drag-over { outline: 1px dashed var(--tk-accent); outline-offset: -1px; }
+.board-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding: .375rem .5rem .25rem;
+  font-size: .875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.board-card {
+  padding: .75rem;
+  background-color: var(--tk-raised);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  cursor: grab;
+  transition: transform .15s var(--tk-ease), opacity .15s var(--tk-ease);
+}
+/* The card being dragged shrinks a touch and fades, so you can see where it came from. */
+.board-card.dragging { transform: scale(.98); opacity: .6; }
+.board-card-title {
+  display: flex;
+  gap: .5rem;
+  margin: 0 0 .25rem;
+  font-size: .9375rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.board-card-title .dot-working { margin-top: .45rem; } /* centres the dot on the first line */
+.board-card.is-done .board-card-title { color: var(--tk-muted); }
+/* Meta line: three pieces ("Athena", "· 20 Oct", "· ● High") that wrap as whole pieces,
+   so a "·" never ends up alone at the end of a line. */
+.board-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: .375rem;
+  margin: 0 0 .5rem;
+  font-size: .8125rem;
+  color: var(--tk-muted);
+}
+.board-card-meta > span { white-space: nowrap; }
+/* The "·" between pieces is drawn here, so the space on both sides of it is the same. */
+.board-card-meta > span + span::before { content: "·"; margin-right: .375rem; }
+.board-card-meta .prio { gap: .375rem; }
+.board-empty { margin: 0; padding: .5rem; font-size: .8125rem; color: var(--tk-muted); }
+/* Ghost pill (the card's move menu): no border until you point at it. */
+.pill-ghost { height: 1.75rem; margin-left: -.5rem; padding: 0 .5rem; border-color: transparent; }
+.pill-ghost .pill-select { color: var(--tk-muted); }
 
 /* ---------- 7. Motion ---------- */
 /* Only opacity and transform move (cheap for the browser), and all of it switches off
@@ -959,27 +1071,6 @@ b, strong { font-weight: 500; }
   color: var(--tk-text) !important;
 }
 
-/* Bar chart: bar heights are set inline from JS as a % of the tallest bar.
-   Bar colours still come from the page's bg-success / bg-warning classes. */
-.bar-chart, .bar-labels { display: flex; justify-content: center; gap: 2.5rem; }
-.bar-chart { align-items: flex-end; height: 200px; border-bottom: 1px solid var(--tk-border); }
-.bar-chart .bar { width: 4.5rem; min-height: 2px; border-radius: var(--tk-radius) var(--tk-radius) 0 0; transition: height .3s ease; }
-.bar-labels span { width: 4.5rem; text-align: center; }
-
-/* Pie chart: JS paints the slices as its background. The surface colour is the empty state. */
-.pie-chart { width: 180px; aspect-ratio: 1; border-radius: 50%; background: var(--tk-surface); }
-
-/* Kanban board */
-.kanban-col { min-height: 260px; }
-.kanban-col.drag-over { outline: 1px dashed var(--tk-accent); outline-offset: -6px; }
-.kanban-card { cursor: grab; background-color: var(--tk-bg); } /* a sheet sitting on the column's surface */
-.kanban-card.dragging { opacity: .5; }
-/* Priority used to be a thick coloured side stripe. Each card already says "High priority"
-   in words, so every priority gets the same 1px hairline. */
-.priority-high,
-.priority-medium,
-.priority-low { border: 1px solid var(--tk-border); }
-
 /* Testimonials: a surface panel with a hairline, in the normal text colour. */
 .testimonial-carousel {
   background-color: var(--tk-surface);
@@ -1000,10 +1091,10 @@ b, strong { font-weight: 500; }
 /* ---------- 9. Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .bar-chart .bar,
   .link-arrow .icon,
   .pill,
   .composer,
+  .board-card,
   .js-reveal .reveal { transition: none; }
   .js-reveal .reveal.is-waiting { opacity: 1; transform: none; }  /* belt and braces: never hidden */
   .dot-working,
