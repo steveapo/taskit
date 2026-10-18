@@ -13,7 +13,7 @@
  *   6. App pages          Tasks, Analytics, Agents: stat strip, pills, composer, table, charts,
  *                         board, agent panels
  *   7. Motion             reveal on scroll, working dot, self-drawing check, new-row flash
- *   8. Page widgets       older pieces the other pages still use (restyled in step 3)
+ *   8. About page         team panels, testimonial carousel, GitHub commit rows
  *   9. Reduced motion
  */
 
@@ -158,8 +158,6 @@ b, strong { font-weight: 500; }
 .nav-link:focus-visible,
 .navbar-toggler:focus-visible,
 .btn-close:focus-visible,
-.carousel-control-prev:focus-visible,
-.carousel-control-next:focus-visible,
 .form-control:focus-visible,
 .form-select:focus-visible,
 .form-check-input:focus-visible {
@@ -451,7 +449,14 @@ b, strong { font-weight: 500; }
   border-radius: var(--tk-radius-lg);
 }
 .panel-title { font-size: 1rem; font-weight: 500; letter-spacing: -0.01em; margin-bottom: .25rem; }
-.panel-text { font-size: 1.0625rem; color: var(--tk-muted); margin-bottom: .75rem; }
+/* .intro-text is the same muted paragraph outside a panel (the About page's purpose text),
+   kept to a readable line length. */
+.panel-text,
+.intro-text { font-size: 1.0625rem; color: var(--tk-muted); }
+.panel-text { margin-bottom: .75rem; }
+.intro-text { max-width: 60ch; }
+/* A panel's top row: title (and a muted line) on the left, a small button on the right. */
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .75rem; }
 .panel > .stage { flex-grow: 1; margin-top: 1.25rem; }
 
 /* Stage: a recessed area that holds a small piece of real-looking UI, centred. */
@@ -1108,32 +1113,49 @@ b, strong { font-weight: 500; }
 .task-row.is-new > td { animation: tk-flash 1.2s var(--tk-ease); }
 @keyframes tk-flash { from { background-color: var(--tk-surface); } }
 
-/* ---------- 8. Page widgets (other pages, restyled in step 3) ---------- */
+/* ---------- 8. About page ---------- */
 
-/* Page intro band (About page): plain background closed off by a hairline. */
-.hero {
-  background-color: var(--tk-bg);
-  border-bottom: 1px solid var(--tk-border);
+/* Team member panels: the avatar image (a rounded square drawn inside the SVG), then the
+   name, the role as a small label and a one-line bio. */
+.member-avatar { display: block; margin-bottom: 1rem; border-radius: var(--tk-radius-lg); }
+.member-bio { margin: 0; font-size: .875rem; color: var(--tk-muted); }
+
+/* Testimonials. Each slide is a two-tone quote at heading size (.lede): the quote in the
+   text colour, then who said it in muted, running on as one sentence. */
+/* min-height holds room for the longest quote (3 lines on wide screens, 5 on phones), so the
+   panel doesn't change height, and push the page around, each time the slide changes. */
+.quote { max-width: 40ch; min-height: 3.45em; margin: 0; }
+@media (max-width: 575.98px) {
+  .quote { min-height: 5.75em; }
 }
-
-.text-brand { color: var(--tk-accent) !important; }
-
-/* Testimonials: a surface panel with a hairline, in the normal text colour. */
-.testimonial-carousel {
-  background-color: var(--tk-surface);
-  border: 1px solid var(--tk-border);
-  border-radius: var(--tk-radius);
-  color: var(--tk-text);
+.quote blockquote,
+.quote p,
+.quote figcaption { display: inline; margin: 0; }
+/* Under the quote: slide bars on the left, previous / next buttons on the right. */
+.carousel-foot { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+/* Bootstrap places the slide bars over the slide; here they sit in the row above instead.
+   ".testimonials.carousel" is specific enough to beat Bootstrap's own
+   "[data-bs-theme=dark] .carousel ..." rules. */
+.testimonials.carousel .carousel-indicators { position: static; justify-content: flex-start; margin: 0; }
+.testimonials.carousel .carousel-indicators [data-bs-target] {
+  width: 16px;
+  height: 2px;
+  margin: 0;
+  border: solid transparent;   /* invisible border: the bar stays 16 × 2, but the button */
+  border-width: 11px 4px;      /* you can click or tap is 24 × 24 */
+  background-color: var(--tk-muted); /* muted, not the hairline colour: a control must stay visible (3:1) */
+  opacity: 1;
 }
-.testimonial-carousel .carousel-item { padding: 3rem 4.5rem 3.5rem; }
-/* Bootstrap's arrow icons are white images. On the light surface we invert them to dark;
-   in dark mode they stay white. ".testimonial-carousel.carousel" is specific enough to
-   beat Bootstrap's own "[data-bs-theme=dark] .carousel ..." rules. */
-.testimonial-carousel.carousel .carousel-control-prev-icon,
-.testimonial-carousel.carousel .carousel-control-next-icon { filter: invert(1); }
-[data-bs-theme="dark"] .testimonial-carousel.carousel .carousel-control-prev-icon,
-[data-bs-theme="dark"] .testimonial-carousel.carousel .carousel-control-next-icon { filter: none; }
-.testimonial-carousel.carousel .carousel-indicators [data-bs-target] { background-color: var(--tk-text); }
+/* The current slide's bar is text colour AND longer, so colour isn't the only difference. */
+.testimonials.carousel .carousel-indicators .active { width: 24px; background-color: var(--tk-text); }
+
+/* GitHub commits: each row is a link to the commit on github.com, in the text colour
+   (not accent) with a muted arrow at the end. Pointing at it underlines the message. */
+.commit-link { display: flex; flex: 1 1 auto; min-width: 0; gap: .75rem; color: var(--tk-text); text-decoration: none; }
+.commit-link > .icon { margin-top: .3125rem; color: var(--tk-muted); }
+.commit-link:hover { color: var(--tk-text); }
+.commit-link:hover .commit-message { text-decoration: underline; text-underline-offset: .2em; }
+.commit-link:hover > .icon { color: var(--tk-text); }
 
 /* ---------- 9. Reduced motion ---------- */
 

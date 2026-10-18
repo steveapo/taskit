@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>About · Taskit</title>
-  <meta name="description" content="Why we built Taskit, what it can do, and the team behind it.">
+  <meta name="description" content="Why we built Taskit, what it can do, the team behind it, and the latest commits from its repository.">
   <meta name="author" content="Stavros Apostolou">
   <link rel="icon" href="img/logo.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,117 +18,158 @@
   <header id="site-header"></header>
 
   <main id="main" class="flex-grow-1">
-    <section class="hero py-5">
-      <div class="container">
-        <h1 class="display-6 fw-bold">About Taskit</h1>
-        <p class="lead mb-0">We think the next generation of task tools won't just hold your to-do list. Agents will work through it. Taskit is our demo of what that could feel like.</p>
-      </div>
-    </section>
+    <div class="container pt-5 pb-4">
+      <!-- Page heading in two tones, like the other pages -->
+      <h1 class="lede mb-5 pt-lg-4">
+        <span>About Taskit.</span>
+        <span class="lede-muted">A calmer way to hand work to AI agents.</span>
+      </h1>
 
-    <!-- Purpose and features -->
-    <section class="container py-5">
-      <div class="row g-5">
-        <div class="col-lg-6" aria-labelledby="purpose-heading">
-          <h2 id="purpose-heading" class="h3">Why we built it</h2>
-          <p>Most task managers stop at storing tasks. We wanted to show the next step: you describe the work, hand it to a specialist agent, and watch it move from <em>To do</em> to <em>Done</em>.</p>
-          <p class="mb-0">Taskit is a demo. The agents are simulated so you can explore the experience safely. Your tasks stay in your own browser and are never sent anywhere.</p>
-        </div>
-        <div class="col-lg-6" aria-labelledby="features-heading">
-          <h2 id="features-heading" class="h3">Features</h2>
-          <ul class="list-unstyled mb-0">
-            <li class="mb-2"><span data-icon="check-circle" class="text-brand me-2"></span>Add, edit, complete and delete tasks with due dates and priorities</li>
-            <li class="mb-2"><span data-icon="check-circle" class="text-brand me-2"></span>Assign each task to one of four specialist AI agents</li>
-            <li class="mb-2"><span data-icon="check-circle" class="text-brand me-2"></span>Simulated agent runs, with every step logged</li>
-            <li class="mb-2"><span data-icon="check-circle" class="text-brand me-2"></span>Live search, filters and sorting</li>
-            <li class="mb-2"><span data-icon="check-circle" class="text-brand me-2"></span>Charts and a drag-and-drop Kanban board</li>
-            <li><span data-icon="check-circle" class="text-brand me-2"></span>Light and dark mode on any screen size</li>
+      <!-- Purpose and features: side by side from 992px. g-4 (not g-5) keeps the row's
+           negative margins inside the container's padding, so phones don't scroll sideways. -->
+      <div class="row g-4">
+        <section class="col-lg-6" aria-labelledby="purpose-heading">
+          <h2 id="purpose-heading" class="label mb-3">Why we built it</h2>
+          <p class="intro-text"><span class="text-body">Most task managers stop at storing tasks.</span> We wanted to show the next step: you describe the work, hand it to a specialist agent, and watch it move from To do to Done.</p>
+          <p class="intro-text mb-0">Taskit is a demo. The agents are simulated so you can explore the experience safely. Your tasks stay in your own browser and are never sent anywhere.</p>
+        </section>
+        <section class="col-lg-6" aria-labelledby="features-heading">
+          <h2 id="features-heading" class="label mb-2">Features</h2>
+          <ul class="row-list">
+            <li><span class="row-icon" aria-hidden="true"><span data-icon="check"></span></span><span class="row-main">Add, edit, complete and delete tasks with due dates and priorities</span></li>
+            <li><span class="row-icon" aria-hidden="true"><span data-icon="check"></span></span><span class="row-main">Assign each task to one of four specialist AI agents</span></li>
+            <li><span class="row-icon" aria-hidden="true"><span data-icon="check"></span></span><span class="row-main">Simulated agent runs, with every step logged</span></li>
+            <li><span class="row-icon" aria-hidden="true"><span data-icon="check"></span></span><span class="row-main">Live search, filters and sorting</span></li>
+            <li><span class="row-icon" aria-hidden="true"><span data-icon="check"></span></span><span class="row-main">Charts and a drag-and-drop Kanban board</span></li>
+            <li><span class="row-icon" aria-hidden="true"><span data-icon="check"></span></span><span class="row-main">Light and dark mode on any screen size</span></li>
           </ul>
-        </div>
+        </section>
       </div>
-    </section>
 
-    <!-- Team members as grid cards -->
-    <section class="container pb-5" aria-labelledby="team-heading">
-      <h2 id="team-heading" class="h3 mb-4">Meet the team</h2>
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
-        <div class="col">
-          <article class="card h-100 text-center shadow-sm"><div class="card-body">
-            <img src="img/team-stavros.svg" alt="Avatar of Stavros Apostolou" width="96" height="96" class="rounded-circle mb-3">
-            <h3 class="h5 mb-0">Stavros Apostolou</h3>
-            <p class="small fw-semibold text-brand">Lead developer</p>
-            <p class="small text-body-secondary mb-0">Built the task store, the agent simulation and the Kanban board.</p>
-          </div></article>
+      <!-- Team: a grid of member panels. 1 column on phones, 2 from 576px, 4 from 992px. -->
+      <section class="section pb-0" aria-labelledby="team-heading">
+        <h2 id="team-heading" class="lede mb-4">
+          <span>The team.</span>
+          <span class="lede-muted">Four people, one board.</span>
+        </h2>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+          <div class="col">
+            <article class="panel">
+              <img src="img/team-stavros.svg" alt="Avatar of Stavros Apostolou" width="56" height="56" class="member-avatar">
+              <h3 class="panel-title">Stavros Apostolou</h3>
+              <p class="label mb-2">Lead developer</p>
+              <p class="member-bio">Built the task store, the agent simulation and the Kanban board.</p>
+            </article>
+          </div>
+          <div class="col">
+            <article class="panel">
+              <img src="img/team-eleni.svg" alt="Avatar of Eleni Markou" width="56" height="56" class="member-avatar">
+              <h3 class="panel-title">Eleni Markou</h3>
+              <p class="label mb-2">UX designer</p>
+              <p class="member-bio">Designed the layouts and made sure everything works on a phone.</p>
+            </article>
+          </div>
+          <div class="col">
+            <article class="panel">
+              <img src="img/team-nikos.svg" alt="Avatar of Nikos Petridis" width="56" height="56" class="member-avatar">
+              <h3 class="panel-title">Nikos Petridis</h3>
+              <p class="label mb-2">QA engineer</p>
+              <p class="member-bio">Tests every feature and runs the accessibility audits.</p>
+            </article>
+          </div>
+          <div class="col">
+            <article class="panel">
+              <img src="img/team-sofia.svg" alt="Avatar of Sofia Dimitriou" width="56" height="56" class="member-avatar">
+              <h3 class="panel-title">Sofia Dimitriou</h3>
+              <p class="label mb-2">Product manager</p>
+              <p class="member-bio">Decides what the agents should learn next.</p>
+            </article>
+          </div>
         </div>
-        <div class="col">
-          <article class="card h-100 text-center shadow-sm"><div class="card-body">
-            <img src="img/team-eleni.svg" alt="Avatar of Eleni Markou" width="96" height="96" class="rounded-circle mb-3">
-            <h3 class="h5 mb-0">Eleni Markou</h3>
-            <p class="small fw-semibold text-brand">UX designer</p>
-            <p class="small text-body-secondary mb-0">Designed the layouts and made sure everything works on a phone.</p>
-          </div></article>
-        </div>
-        <div class="col">
-          <article class="card h-100 text-center shadow-sm"><div class="card-body">
-            <img src="img/team-nikos.svg" alt="Avatar of Nikos Petridis" width="96" height="96" class="rounded-circle mb-3">
-            <h3 class="h5 mb-0">Nikos Petridis</h3>
-            <p class="small fw-semibold text-brand">QA engineer</p>
-            <p class="small text-body-secondary mb-0">Tests every feature and runs the accessibility audits.</p>
-          </div></article>
-        </div>
-        <div class="col">
-          <article class="card h-100 text-center shadow-sm"><div class="card-body">
-            <img src="img/team-sofia.svg" alt="Avatar of Sofia Dimitriou" width="96" height="96" class="rounded-circle mb-3">
-            <h3 class="h5 mb-0">Sofia Dimitriou</h3>
-            <p class="small fw-semibold text-brand">Product manager</p>
-            <p class="small text-body-secondary mb-0">Decides what the agents should learn next.</p>
-          </div></article>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Testimonials carousel (Bootstrap data attributes, no custom JS) -->
-    <section class="container pb-5" aria-labelledby="testimonials-heading">
-      <h2 id="testimonials-heading" class="h3 mb-4">What people say</h2>
-      <div id="testimonials" class="carousel slide testimonial-carousel" data-bs-ride="carousel" data-bs-interval="6000">
-        <div class="carousel-indicators">
-          <button type="button" data-bs-target="#testimonials" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Testimonial 1"></button>
-          <button type="button" data-bs-target="#testimonials" data-bs-slide-to="1" aria-label="Testimonial 2"></button>
-          <button type="button" data-bs-target="#testimonials" data-bs-slide-to="2" aria-label="Testimonial 3"></button>
+      <!-- Testimonials: Bootstrap's carousel, driven only by its data attributes (no custom JS).
+           It moves on every 6 seconds and pauses while the pointer is over it. -->
+      <section class="section pb-0" aria-labelledby="testimonials-heading">
+        <h2 id="testimonials-heading" class="lede mb-4">
+          <span>What people say.</span>
+          <span class="lede-muted">From people who tried the demo.</span>
+        </h2>
+        <div class="panel">
+          <div id="testimonials" class="carousel slide carousel-fade testimonials" data-bs-ride="carousel" data-bs-interval="6000">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <figure class="lede quote">
+                  <blockquote><p>“Watching Hermes pick up my newsletter task made the whole idea of AI agents click for me.”</p></blockquote>
+                  <figcaption class="lede-muted">Maria K., marketing lead</figcaption>
+                </figure>
+              </div>
+              <div class="carousel-item">
+                <figure class="lede quote">
+                  <blockquote><p>“The Kanban board and the activity log tell me exactly what's going on at a glance.”</p></blockquote>
+                  <figcaption class="lede-muted">George T., project manager</figcaption>
+                </figure>
+              </div>
+              <div class="carousel-item">
+                <figure class="lede quote">
+                  <blockquote><p>“Simple, fast and works great on my phone. Dark mode is a nice touch.”</p></blockquote>
+                  <figcaption class="lede-muted">Anna P., student</figcaption>
+                </figure>
+              </div>
+            </div>
+            <!-- Under the quote: the slide bars on the left, previous / next on the right. -->
+            <div class="carousel-foot">
+              <div class="carousel-indicators">
+                <button type="button" data-bs-target="#testimonials" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Testimonial 1"></button>
+                <button type="button" data-bs-target="#testimonials" data-bs-slide-to="1" aria-label="Testimonial 2"></button>
+                <button type="button" data-bs-target="#testimonials" data-bs-slide-to="2" aria-label="Testimonial 3"></button>
+              </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-icon" type="button" data-bs-target="#testimonials" data-bs-slide="prev">
+                  <span data-icon="chevron-left"></span>
+                  <span class="visually-hidden">Previous testimonial</span>
+                </button>
+                <button class="btn btn-icon" type="button" data-bs-target="#testimonials" data-bs-slide="next">
+                  <span data-icon="chevron-right"></span>
+                  <span class="visually-hidden">Next testimonial</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <figure class="text-center mb-0">
-              <blockquote class="blockquote"><p>“Watching Hermes pick up my newsletter task made the whole idea of AI agents click for me.”</p></blockquote>
-              <figcaption class="small opacity-75">Maria K., marketing lead</figcaption>
-            </figure>
+      </section>
+
+      <!-- GitHub activity: the public API feature. js/github.js fills the list from
+           api.github.com and sets the repository name and link. -->
+      <section class="section pb-0" aria-labelledby="github-heading">
+        <h2 id="github-heading" class="lede mb-4">
+          <span>Built in the open.</span>
+          <span class="lede-muted">The latest commits from the Taskit repository.</span>
+        </h2>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3 class="panel-title">Latest commits</h3>
+              <p id="github-repo" class="row-meta mono mb-0"></p>
+            </div>
+            <button id="github-refresh" type="button" class="btn btn-pill-ghost btn-sm">
+              <span data-icon="arrow-path"></span> Refresh
+            </button>
           </div>
-          <div class="carousel-item">
-            <figure class="text-center mb-0">
-              <blockquote class="blockquote"><p>“The Kanban board and the activity log tell me exactly what's going on at a glance.”</p></blockquote>
-              <figcaption class="small opacity-75">George T., project manager</figcaption>
-            </figure>
-          </div>
-          <div class="carousel-item">
-            <figure class="text-center mb-0">
-              <blockquote class="blockquote"><p>“Simple, fast and works great on my phone. Dark mode is a nice touch.”</p></blockquote>
-              <figcaption class="small opacity-75">Anna P., student</figcaption>
-            </figure>
-          </div>
+          <ul id="github-commits" class="row-list"></ul>
+          <a id="github-link" class="link-arrow mt-3" href="https://github.com/" target="_blank" rel="noopener">
+            View the repository <span data-icon="arrow-up-right"></span><span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#testimonials" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous testimonial</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#testimonials" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next testimonial</span>
-        </button>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 
   <footer id="site-footer"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="js/store.js"></script>
+  <script src="js/activity.js"></script>
+  <script src="js/github.js"></script>
 </body>
 </html>
