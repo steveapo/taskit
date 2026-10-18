@@ -3,8 +3,9 @@
  * Loaded in <head> so the saved colour theme is applied before the first paint
  * (no white flash in dark mode). On DOMContentLoaded it injects the one header and
  * footer every page shares, so nav links live in exactly one place.
- * Also hosts the icon helper (Taskit.icon), the validation helper used by every form on
- * the site, and the small observer that fades sections in as they scroll into view (.reveal).
+ * Also hosts the icon helper (Taskit.icon), the validation helpers used by every form on
+ * the site (checks, error links, reset), and the small observer that fades sections in
+ * as they scroll into view (.reveal).
  */
 (function (Taskit) {
   'use strict';
@@ -49,7 +50,7 @@
     'light-bulb': 'M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18',
     'magnifying-glass': 'm21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z',
     'map-pin': 'M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z',
-    'moon':'M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z',
+    'moon': 'M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z',
     'pause': 'M15.75 5.25v13.5m-7.5-13.5v13.5',
     'pencil-square': 'm16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10',
     'pencil': 'm16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125',
@@ -234,16 +235,63 @@
     el.setCustomValidity(length >= Math.max(1, el.minLength) ? '' : 'Please fill in this field.');
   }
 
-  // Shared by every form: browser validation + Bootstrap's red/green styling.
+  // Each form's { fieldId: errorId } list, saved by linkErrors() so the helpers below can
+  // find a form's error messages again.
+  const errorLinks = new Map();
+
+  // Links a field to its error message only while the field is invalid, so screen readers
+  // hear "invalid, Add a subject." on a bad field and nothing extra on a good one.
+  // Only after a submit attempt (.was-validated), like the red borders.
+  function updateErrorLinks(form) {
+    const checked = form.classList.contains('was-validated');
+    Object.entries(errorLinks.get(form) || {}).forEach(([fieldId, errorId]) => {
+      const field = document.getElementById(fieldId);
+      if (checked && !field.validity.valid) {
+        field.setAttribute('aria-invalid', 'true');
+        field.setAttribute('aria-describedby', errorId);
+      } else {
+        field.removeAttribute('aria-invalid');
+        field.removeAttribute('aria-describedby');
+      }
+    });
+  }
+
+  // A page calls this once with its form and { fieldId: errorId } pairs. From then on the
+  // error links follow the field's state: on submit (validateForm), on reset
+  // (clearValidation) and while the user types (the listener below).
+  function linkErrors(form, map) {
+    if (!errorLinks.has(form)) {
+      // On the document, not the form: document listeners run in the order they were
+      // added, and layout.js added its own checkText listener (further down) while <head>
+      // loaded, before any page could call this. So the text has always been re-checked
+      // before the links are updated. (A listener on the form would run first instead.)
+      document.addEventListener('input', e => {
+        if (form.contains(e.target)) updateErrorLinks(form);
+      });
+    }
+    errorLinks.set(form, map);
+  }
+
+  // Shared by every form: browser validation + Bootstrap's red styling, then the error
+  // links, then focus on the first problem (after the links, so it is announced as invalid).
   function validateForm(form) {
     form.querySelectorAll(TEXT_FIELDS).forEach(checkText);
     form.classList.add('was-validated');
+    updateErrorLinks(form);
     const firstInvalid = form.querySelector(':invalid');
     if (firstInvalid) firstInvalid.focus();
     return !firstInvalid;
   }
 
-  // Re-check text fields as the user types so the red/green state updates live.
+  // Wipes every trace of an earlier failed submit: the red state, the "spaces only" errors
+  // checkText stored on the text fields, and the error links.
+  function clearValidation(form) {
+    form.classList.remove('was-validated');
+    form.querySelectorAll(TEXT_FIELDS).forEach(el => el.setCustomValidity(''));
+    updateErrorLinks(form);
+  }
+
+  // Re-check text fields as the user types so the red state updates live.
   document.addEventListener('input', e => {
     if (e.target.matches && e.target.matches(TEXT_FIELDS)) checkText(e.target);
   });
@@ -267,5 +315,5 @@
   });
 
   Taskit.icon = icon;
-  Taskit.layout = { validateForm, socialLinksHtml };
+  Taskit.layout = { validateForm, linkErrors, clearValidation, socialLinksHtml };
 })(window.Taskit = window.Taskit || {});

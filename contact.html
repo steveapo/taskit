@@ -43,7 +43,10 @@
               </div>
               <div class="col-md-6">
                 <label for="contact-email" class="form-label label">Email</label>
-                <input type="email" id="contact-email" class="form-control" required maxlength="100" autocomplete="email">
+                <!-- type="email" alone accepts "a@b"; the pattern also asks for a dot in the domain part,
+                     so the address really looks like name@example.com. -->
+                <input type="email" id="contact-email" class="form-control" required maxlength="100" autocomplete="email"
+                       pattern="[^@\s]+@[^@\s]+\.[^@\s]+">
                 <p id="email-error" class="invalid-feedback mb-0">Enter an email address like name@example.com.</p>
               </div>
               <div class="col-12">

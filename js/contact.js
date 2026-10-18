@@ -21,22 +21,10 @@
     { id: 'contact-message', label: 'Message', error: 'message-error' },
   ];
 
-  // Same approach as tasks.js: a field is linked to its error message only while it is
-  // invalid, so a screen reader hears "invalid, Add a subject." on a bad field and nothing
-  // extra on a good one. Only after a submit attempt (.was-validated), like the red borders.
-  function updateErrorAttributes() {
-    const checked = form.classList.contains('was-validated');
-    FIELDS.forEach(f => {
-      const field = $(f.id);
-      if (checked && !field.validity.valid) {
-        field.setAttribute('aria-invalid', 'true');
-        field.setAttribute('aria-describedby', f.error);
-      } else {
-        field.removeAttribute('aria-invalid');
-        field.removeAttribute('aria-describedby');
-      }
-    });
-  }
+  // layout.js links each field to its error message (aria-invalid + aria-describedby) only
+  // while the field is invalid, as on the Tasks page. Object.fromEntries turns the list
+  // above into the { 'contact-name': 'name-error', … } pairs it expects.
+  layout.linkErrors(form, Object.fromEntries(FIELDS.map(f => [f.id, f.error])));
 
   // Writes the trimmed values into the pop-up's list and opens it. escapeHtml turns
   // characters like < and > into plain text, so whatever was typed is shown, never run.
@@ -47,31 +35,16 @@
     bootstrap.Modal.getOrCreateInstance(modalEl).show();
   }
 
-  // Empties the fields and wipes every trace of an earlier failed submit: the red state,
-  // the "spaces only" errors layout.js stored on the text fields, and the error links.
-  function clearForm() {
-    form.reset();
-    form.classList.remove('was-validated');
-    FIELDS.forEach(f => $(f.id).setCustomValidity(''));
-    updateErrorAttributes();
-  }
-
   // The same text links as the footer (GitHub, LinkedIn, X, Instagram).
   $('contact-social').innerHTML = layout.socialLinksHtml();
 
   form.addEventListener('submit', e => {
     e.preventDefault(); // stay on the page: there is no server to send the form to
-    const valid = layout.validateForm(form); // also focuses the first invalid field
-    updateErrorAttributes();
-    if (!valid) return;
-    showConfirmation(); // reads the values first...
-    clearForm();        // ...then clears them
-  });
-
-  // Keep the error links up to date while the user fixes a field. This listener is added
-  // after layout.js's one, so it runs after layout.js has re-checked the text.
-  document.addEventListener('input', e => {
-    if (form.contains(e.target)) updateErrorAttributes();
+    if (!layout.validateForm(form)) return; // marks the errors and focuses the first one
+    // Show the values first, then empty the fields and remove any red state and error links.
+    showConfirmation();
+    form.reset();
+    layout.clearValidation(form);
   });
 
   // A modal opened from a script doesn't know where focus came from, so when it closes

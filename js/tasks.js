@@ -142,38 +142,13 @@
     $('task-submit').title = text;
   }
 
-  // Each field and the error message under the composer that belongs to it.
-  const ERRORS = { 'task-name': 'name-error', 'task-description': 'detail-error', 'task-due': 'due-error' };
-
-  // Links a field to its error only while the field is invalid, so screen readers hear
-  // "invalid, Give the task a name." on a bad field and nothing extra on a good one.
-  // Only after a submit attempt (.was-validated), like the red borders.
-  function updateErrorAttributes() {
-    const checked = form.classList.contains('was-validated');
-    Object.entries(ERRORS).forEach(([fieldId, errorId]) => {
-      const field = $(fieldId);
-      if (checked && !field.validity.valid) {
-        field.setAttribute('aria-invalid', 'true');
-        field.setAttribute('aria-describedby', errorId);
-      } else {
-        field.removeAttribute('aria-invalid');
-        field.removeAttribute('aria-describedby');
-      }
-    });
-  }
-
-  // Wipes every trace of an earlier failed submit: the red state, the "spaces only" errors
-  // that layout.js stored on the text fields, and the error links above.
-  function clearValidation() {
-    form.classList.remove('was-validated');
-    $('task-name').setCustomValidity('');
-    $('task-description').setCustomValidity('');
-    updateErrorAttributes();
-  }
+  // Each field and the error message under the composer that belongs to it. layout.js links
+  // them (aria-invalid + aria-describedby) only while the field is invalid.
+  layout.linkErrors(form, { 'task-name': 'name-error', 'task-description': 'detail-error', 'task-due': 'due-error' });
 
   function resetForm() {
     form.reset();
-    clearValidation();
+    layout.clearValidation(form);
     $('task-id').value = ''; // hidden inputs aren't cleared by form.reset()
     $('form-heading').textContent = 'Add a task';
     setSubmitLabel('Add task');
@@ -183,7 +158,7 @@
   function startEdit(id) {
     const t = store.getTask(id);
     if (!t) return;
-    clearValidation(); // a failed add before this must not leave its errors on the edit
+    layout.clearValidation(form); // a failed add before this must not leave its errors on the edit
     $('task-id').value = t.id;
     $('task-name').value = t.name;
     $('task-description').value = t.description;
@@ -199,9 +174,7 @@
 
   form.addEventListener('submit', e => {
     e.preventDefault();
-    const valid = layout.validateForm(form);
-    updateErrorAttributes();
-    if (!valid) return;
+    if (!layout.validateForm(form)) return;
     const id = $('task-id').value;
     if (id) store.updateTask(id, readForm());
     else store.addTask(readForm());
@@ -209,12 +182,6 @@
   });
 
   $('task-cancel').addEventListener('click', resetForm);
-
-  // Keep the error links up to date while the user fixes a field. This listener is on the
-  // document and added after layout.js's one, so it runs after layout.js re-checks the text.
-  document.addEventListener('input', e => {
-    if (form.contains(e.target)) updateErrorAttributes();
-  });
 
   /* ---------- toolbar: each control updates one key of `view`, then re-renders ---------- */
 
