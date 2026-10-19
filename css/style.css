@@ -326,8 +326,52 @@ b, strong { font-weight: 500; }
   --bs-navbar-toggler-border-color: var(--tk-border);
 }
 .site-header .navbar-brand { font-weight: 500; }
-/* The menu button on phones now holds a Heroicons "bars-3" instead of Bootstrap's picture. */
+/* The menu button on phones holds two Heroicons: "bars-3" while closed, "x-mark" while open.
+   Bootstrap flips aria-expanded on the button, so CSS can read it to pick the icon. */
 .site-header .navbar-toggler .icon { width: 1.5rem; height: 1.5rem; vertical-align: middle; }
+.site-header .navbar-toggler .icon:last-child,
+.site-header .navbar-toggler[aria-expanded="true"] .icon:first-child { display: none; }
+.site-header .navbar-toggler[aria-expanded="true"] .icon:last-child { display: inline-block; }
+
+/* Phones and tablets (below Bootstrap's lg breakpoint): the menu moves into thumb reach.
+   The button becomes a round pill fixed to the bottom-right corner, and the menu is a
+   panel fixed just above it. The panel's bottom edge is pinned, so when Bootstrap grows
+   its height from 0 it opens upwards. env(safe-area-inset-bottom) keeps both clear of
+   the iPhone home bar. */
+@media (max-width: 991.98px) {
+  .site-header .navbar-toggler {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--tk-pill);
+    border-color: var(--tk-text);
+    background-color: var(--tk-text);  /* filled like .btn-pill, so it reads on any page */
+    color: var(--tk-bg);
+  }
+  .site-header .navbar-toggler:hover { background-color: color-mix(in oklch, var(--tk-text) 82%, var(--tk-bg)); }
+  .site-header .navbar-collapse {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom)); /* 1rem gap + 3rem button + .5rem */
+    width: min(16rem, calc(100vw - 2rem));
+    padding: .25rem .75rem;
+    background-color: var(--tk-bg);
+    /* It floats over content with no shadow, so its edge is the firmer hover hairline. */
+    border: 1px solid color-mix(in oklch, var(--tk-muted) 50%, transparent);
+    border-radius: var(--tk-radius-lg);
+  }
+  /* The menu is right-aligned. The 2rem theme button centres a 1rem icon, so pull it right
+     by the .5rem gap to line the icon up with the end of the link text above it. */
+  .site-header .theme-toggle { margin-right: -.5rem; }
+  /* Room under the footer so the floating button never covers its last line. */
+  .site-footer { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+}
 .site-header .nav-link { font-size: .875rem; }
 /* The current page is text colour AND medium weight, so colour isn't the only signal. */
 .site-header .nav-link.active { font-weight: 500; }

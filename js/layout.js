@@ -171,11 +171,11 @@
           <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">${LOGO_SVG} Taskit</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
                   aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
-            ${icon('bars-3')}
+            ${icon('bars-3')}${icon('x-mark')}
           </button>
           <div class="collapse navbar-collapse" id="main-nav">
-            <ul class="navbar-nav me-auto ms-lg-3 mb-2 mb-lg-0">${links}</ul>
-            <div class="d-flex align-items-center gap-2 mb-2 mb-lg-0">
+            <ul class="navbar-nav me-auto ms-lg-3 mb-2 mb-lg-0 text-end">${links}</ul>
+            <div class="d-flex align-items-center justify-content-end gap-2 mb-2 mb-lg-0">
               <button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false"
                       class="theme-toggle btn btn-sm d-inline-flex align-items-center justify-content-center p-0">
                 ${icon('moon')}
@@ -185,6 +185,24 @@
           </div>
         </div>
       </nav>`;
+  }
+
+  // On phones the menu floats above the page, so it should close like a popup: on a tap
+  // outside it or on Escape (focus goes back to the button). Bootstrap's collapse does neither.
+  function initMenuDismiss() {
+    const nav = document.querySelector('.site-header .navbar');
+    const menu = document.getElementById('main-nav');
+    if (!nav || !menu || !window.bootstrap) return;
+    const hide = () => {
+      if (menu.classList.contains('show')) bootstrap.Collapse.getOrCreateInstance(menu, { toggle: false }).hide();
+    };
+    document.addEventListener('click', e => { if (!nav.contains(e.target)) hide(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && menu.classList.contains('show')) {
+        hide();
+        nav.querySelector('.navbar-toggler').focus();
+      }
+    });
   }
 
   // One footer column: a small label, then a plain list of links to existing pages.
@@ -309,6 +327,7 @@
     }
     applyTheme(document.documentElement.getAttribute('data-bs-theme')); // sync the new button's icon
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    initMenuDismiss();
     fillStaticIcons(); // after the header/footer are in, so it also covers anything they hold
     if (Taskit.store && !Taskit.store.persistent) showStorageWarning();
     initReveal();
