@@ -4,10 +4,8 @@ Taskit is a small task manager for teams that hand routine work to AI agents. Yo
 
 ## Links
 
-- GitHub repository: _add after publishing_
+- GitHub repository: https://github.com/steveapo/taskit
 - Live site (optional, GitHub Pages): _add if enabled_
-
-Once the repository is public, also change `REPO` at the top of `js/github.js` (it is `'twbs/bootstrap'` for now) to `"username/repository"`, so the About page shows this project's own commits.
 
 ## How to run
 

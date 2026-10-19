@@ -8,8 +8,8 @@
 (function (Taskit) {
   'use strict';
 
-  // Change this to your own "username/repository" once the Taskit repo is public on GitHub.
-  const REPO = 'twbs/bootstrap';
+  // The public GitHub repository whose commits the About page lists ("owner/repository").
+  const REPO = 'steveapo/taskit';
 
   const API_URL = `https://api.github.com/repos/${REPO}/commits?per_page=5`;
   const REPO_URL = `https://github.com/${REPO}`;
