@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact · Taskit</title>
+  <meta name="description" content="Get in touch with the Taskit team. Send us a message, find our Athens office on the map, or follow us on social media.">
+  <meta name="author" content="Stavros Apostolou">
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/layout.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <header id="site-header"></header>
+
+  <main id="main" class="flex-grow-1">
+    <div class="container pt-5 pb-4">
+      <!-- Page heading in two tones, like the other pages -->
+      <h1 class="lede mb-5 pt-lg-4">
+        <span>Contact us.</span>
+        <span class="lede-muted">Questions, ideas or feedback? We read everything.</span>
+      </h1>
+
+      <!-- Form on the left (7 of 12 columns), office details on the right (5 of 12) from 992px;
+           one above the other on smaller screens. gy-5 is the gap when they are stacked.
+           gx-lg-5 widens the gap between the two columns only on large screens, where there
+           is room for the row's wider negative margins (on phones they would scroll sideways). -->
+      <div class="row gx-4 gx-lg-5 gy-5">
+        <section class="col-lg-7" aria-labelledby="form-heading">
+          <h2 id="form-heading" class="label mb-3">Send a message</h2>
+          <!-- novalidate: the browser's own error bubbles are switched off, so js/contact.js
+               (through Taskit.layout.validateForm) shows our messages under each field instead. -->
+          <form id="contact-form" class="contact-form" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="contact-name" class="form-label label">Name</label>
+                <input type="text" id="contact-name" class="form-control" required minlength="2" maxlength="60" autocomplete="name">
+                <p id="name-error" class="invalid-feedback mb-0">Enter your name, at least 2 characters.</p>
+              </div>
+              <div class="col-md-6">
+                <label for="contact-email" class="form-label label">Email</label>
+                <!-- type="email" alone accepts "a@b"; the pattern also asks for a dot in the domain part,
+                     so the address really looks like name@example.com. -->
+                <input type="email" id="contact-email" class="form-control" required maxlength="100" autocomplete="email"
+                       pattern="[^@\s]+@[^@\s]+\.[^@\s]+">
+                <p id="email-error" class="invalid-feedback mb-0">Enter an email address like name@example.com.</p>
+              </div>
+              <div class="col-12">
+                <label for="contact-subject" class="form-label label">Subject</label>
+                <input type="text" id="contact-subject" class="form-control" required maxlength="100" autocomplete="off">
+                <p id="subject-error" class="invalid-feedback mb-0">Add a subject.</p>
+              </div>
+              <div class="col-12">
+                <label for="contact-message" class="form-label label">Message</label>
+                <textarea id="contact-message" class="form-control" rows="5" required minlength="10" maxlength="1000"></textarea>
+                <p id="message-error" class="invalid-feedback mb-0">Write a message of at least 10 characters.</p>
+              </div>
+            </div>
+            <button type="submit" id="contact-submit" class="btn btn-pill mt-4">
+              Send message <span data-icon="arrow-right"></span>
+            </button>
+            <p class="small text-body-secondary mt-2 mb-0">We'll reply within two working days.</p>
+          </form>
+        </section>
+
+        <!-- Office details, map and social links: three quiet blocks split by hairlines -->
+        <div class="col-lg-5">
+          <section class="contact-block" aria-labelledby="office-heading">
+            <h2 id="office-heading" class="label mb-3">Office</h2>
+            <address class="mb-0">
+              <p class="d-flex align-items-center gap-2 mb-2"><span data-icon="map-pin" class="text-body-secondary"></span>Athens, Greece</p>
+              <p class="d-flex align-items-center gap-2 mb-0"><span data-icon="envelope" class="text-body-secondary"></span><a class="link-offset-2 link-underline-opacity-25" href="mailto:hello@taskit.example">hello@taskit.example</a></p>
+            </address>
+          </section>
+
+          <!-- Google Maps embed. The stage gives it the rounded hairline frame; ratio-4x3 is
+               Bootstrap's helper that keeps the iframe 4:3 at any width. -->
+          <div class="contact-block">
+            <div class="stage stage-map">
+              <div class="ratio ratio-4x3">
+                <iframe src="https://www.google.com/maps?q=Athens,Greece&amp;output=embed"
+                        title="Map showing Taskit's office in Athens, Greece"
+                        loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+              </div>
+            </div>
+          </div>
+
+          <section class="contact-block" aria-labelledby="social-heading">
+            <h2 id="social-heading" class="label mb-3">Follow us</h2>
+            <!-- Filled by js/contact.js with the same links as the footer -->
+            <div id="contact-social" class="d-flex flex-wrap gap-3"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation pop-up: a Bootstrap modal, filled in and opened by js/contact.js.
+         Bootstrap traps the keyboard inside it while open and closes it on Esc or a click outside. -->
+    <div class="modal fade" id="confirm-modal" tabindex="-1" aria-labelledby="confirm-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="confirm-title" class="modal-title panel-title mb-0 d-flex align-items-center gap-2">
+              <span data-icon="check-circle" class="icon-lg text-primary"></span>Message sent
+            </h2>
+            <button type="button" class="btn btn-icon ms-auto" data-bs-dismiss="modal" aria-label="Close">
+              <span data-icon="x-mark" class="icon-lg"></span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="text-body-secondary">Thanks for getting in touch. Here is what you sent:</p>
+            <dl id="confirm-details" class="detail-list"></dl>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-pill" data-bs-dismiss="modal">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="js/store.js"></script>
+  <script src="js/contact.js"></script>
+</body>
+</html>

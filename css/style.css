@@ -1,0 +1,1239 @@
+/*
+ * style.css — Taskit's look, layered on top of Bootstrap 5.3.
+ * Bootstrap still does the grid, the utilities and the components. This file changes how
+ * they look by overriding Bootstrap's own CSS variables, plus a few small classes for the
+ * patterns Bootstrap doesn't have (panels, stages, the fake app window, row lists).
+ *
+ * Order of this file:
+ *   1. Tokens             colours, radii and easing (the single source of truth)
+ *   2. Bootstrap mapping  feeds the tokens into Bootstrap's variables
+ *   3. Base type          headings, mono, labels, section spacing
+ *   4. Components         focus, buttons, links, forms, tables, tooltips, header, footer
+ *   5. Layout patterns    two-tone headings, panels, stages, window, rows, chips, tiles
+ *   6. App pages          Tasks, Analytics, Agents: stat strip, pills, composer, table, charts,
+ *                         board, agent panels
+ *   7. Motion             reveal on scroll, working dot, self-drawing check, new-row flash
+ *   8. About page         team panels, testimonial carousel, GitHub commit rows
+ *   9. Contact page       form box, info blocks, map, confirmation modal
+ *  10. Reduced motion
+ */
+
+/* ---------- 1. Tokens ---------- */
+
+/* Light theme (also the default before the theme attribute is set).
+   Colours are OKLCH: lightness %, chroma (colourfulness), hue. Hue 215 is our turquoise;
+   the neutrals carry a tiny bit of it (chroma 0.002-0.012) so the greys feel related. */
+:root,
+[data-bs-theme="light"] {
+  --tk-bg: oklch(98.5% 0.003 215);      /* page background, near-white */
+  --tk-surface: oklch(96.5% 0.004 215); /* one step darker: panels, inputs, hover fills */
+  --tk-stage: oklch(95% 0.005 215);     /* recessed area inside a panel that holds a UI preview */
+  --tk-raised: oklch(99.4% 0.002 215);  /* the UI preview itself, sitting on a stage */
+  --tk-border: oklch(92.5% 0.005 215);  /* hairlines: about 1.2:1, there but barely */
+  --tk-muted: oklch(50% 0.012 215);     /* secondary text */
+  --tk-text: oklch(22% 0.012 215);      /* body text, near-black */
+  --tk-accent: oklch(43% 0.076 215);    /* turquoise (hex 005A6A): links, primary action, focus */
+  --tk-danger: oklch(52% 0.17 25);      /* red: only for destructive actions */
+  /* Priority dots (and the priority chart). A soft coral and an amber, used only on the
+     small dot and the bar segments; the word next to them carries the meaning. Each is at
+     least 3:1 on bg, surface and stage (the minimum for a graphic). The coral is lighter,
+     less saturated and more orange than --tk-danger: "urgent" is not "destroys something". */
+  --tk-prio-high: oklch(58% 0.15 30);   /* coral red, 3.98:1 on stage (the darkest) */
+  --tk-prio-medium: oklch(62% 0.13 70); /* amber, 3.24:1 on stage */
+
+  /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
+  --tk-bg-rgb: 248, 251, 251;
+  --tk-surface-rgb: 241, 244, 245;
+  --tk-text-rgb: 20, 28, 30;
+  --tk-accent-rgb: 0, 90, 106;
+  --tk-danger-rgb: 182, 49, 50;
+
+  --tk-radius: 6px;       /* small things: buttons, inputs, chips */
+  --tk-radius-lg: 10px;   /* big things: panels, stages, the app window */
+  --tk-pill: 999px;       /* fully rounded ends: the main call-to-action buttons */
+  --tk-ease: cubic-bezier(.25, 1, .5, 1); /* "ease-out-quart": fast start, soft landing */
+}
+
+/* Dark theme: the same roles, re-tuned so every text pair still passes WCAG AA.
+   Here the stage is darker than the page, so previews look sunk into the panel. */
+[data-bs-theme="dark"] {
+  --tk-bg: oklch(17% 0.006 215);        /* page background, near-black */
+  --tk-surface: oklch(21% 0.007 215);   /* one step lighter: panels, inputs, hover fills */
+  --tk-stage: oklch(14.5% 0.006 215);   /* recessed area, darker than the page */
+  --tk-raised: oklch(21% 0.007 215);    /* the preview on a stage: same step as a panel */
+  --tk-border: oklch(26% 0.007 215);    /* hairlines */
+  --tk-muted: oklch(72% 0.010 215);     /* secondary text */
+  --tk-text: oklch(94% 0.004 215);      /* body text, off-white */
+  --tk-accent: oklch(78% 0.075 215);    /* lighter, calmer turquoise so it reads on dark */
+  --tk-danger: oklch(70% 0.15 25);      /* lighter red for the same reason */
+  --tk-prio-high: oklch(72% 0.12 30);   /* calmer coral, 6.79:1 on surface (the lightest) */
+  --tk-prio-medium: oklch(80% 0.12 78); /* amber, 9.35:1 on surface */
+
+  /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
+  --tk-bg-rgb: 13, 16, 17;
+  --tk-surface-rgb: 21, 25, 26;
+  --tk-text-rgb: 232, 236, 237;
+  --tk-accent-rgb: 125, 196, 213;
+  --tk-danger-rgb: 237, 117, 110;
+}
+
+/* ---------- 2. Bootstrap mapping ---------- */
+
+/* Written once for both themes: each variable points at a token, and the token itself
+   changes with the theme. [data-bs-theme] has the same specificity as Bootstrap's own
+   theme blocks, and this file loads after Bootstrap, so these win. */
+:root,
+[data-bs-theme] {
+  --bs-body-bg: var(--tk-bg);                       /* page background */
+  --bs-body-color: var(--tk-text);                  /* default text */
+  --bs-emphasis-color: var(--tk-text);              /* Bootstrap's "strongest" text (tables, strong) */
+  --bs-heading-color: var(--tk-text);               /* headings */
+  --bs-secondary-color: var(--tk-muted);            /* .text-body-secondary */
+  --bs-secondary-bg: var(--tk-surface);             /* .bg-body-secondary, progress track */
+  --bs-tertiary-bg: var(--tk-surface);              /* .bg-body-tertiary */
+  --bs-border-color: var(--tk-border);              /* every 1px border */
+  --bs-border-color-translucent: var(--tk-border);  /* modals and dropdowns use this one */
+  --bs-link-color: var(--tk-accent);                /* links are accent... */
+  --bs-link-hover-color: var(--tk-text);            /* ...and turn to text colour on hover */
+  --bs-primary: var(--tk-accent);                   /* Bootstrap's "primary" is our accent */
+  --bs-danger: var(--tk-danger);                    /* and "danger" is our red */
+  --bs-focus-ring-color: var(--tk-accent);          /* .focus-ring helper */
+  --bs-form-invalid-color: var(--tk-danger);        /* form error text ("Give the task a name.") */
+  --bs-form-invalid-border-color: var(--tk-danger); /* and the red border on invalid fields */
+
+  /* Same colours as RGB triplets, for Bootstrap's rgba() utilities. */
+  --bs-body-bg-rgb: var(--tk-bg-rgb);
+  --bs-body-color-rgb: var(--tk-text-rgb);
+  --bs-emphasis-color-rgb: var(--tk-text-rgb);
+  --bs-secondary-bg-rgb: var(--tk-surface-rgb);
+  --bs-tertiary-bg-rgb: var(--tk-surface-rgb);
+  --bs-link-color-rgb: var(--tk-accent-rgb);        /* Bootstrap actually draws links with this one */
+  --bs-link-hover-color-rgb: var(--tk-text-rgb);
+  --bs-primary-rgb: var(--tk-accent-rgb);
+  --bs-danger-rgb: var(--tk-danger-rgb);
+
+  /* Fonts. Body size, line-height and weight keep Bootstrap's defaults: 16px / 1.5 / 400. */
+  --bs-body-font-family: "Geist", system-ui, sans-serif;
+  --bs-font-monospace: "Geist Mono", ui-monospace, monospace;
+
+  /* Bootstrap's three radius sizes all become our small radius. */
+  --bs-border-radius-sm: var(--tk-radius);
+  --bs-border-radius: var(--tk-radius);
+  --bs-border-radius-lg: var(--tk-radius);
+}
+
+/* ---------- 3. Base type ---------- */
+
+/* Headings are regular weight (400), never bold, with slightly tight letter-spacing.
+   Size and spacing make the hierarchy, not weight. */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+h1, .h1 { font-size: 2.5rem; }
+h2, .h2 { font-size: 1.75rem; }
+h3, .h3 { font-size: 1.25rem; }
+h4, .h4, h5, .h5, h6, .h6 { font-size: 1rem; }
+
+/* Bootstrap makes <strong> "bolder". Medium is enough to stand out in a calm UI. */
+b, strong { font-weight: 500; }
+
+/* Mono is for data only: dates, ids, counts. "tnum" makes every digit the same width. */
+.mono { font-family: var(--bs-font-monospace); font-feature-settings: "tnum"; }
+
+/* Small uppercase metadata label (eyebrows, footer column titles). Table headers match it. */
+.label,
+.table > thead th {
+  font-size: .75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  line-height: 1.5;
+  color: var(--tk-muted);
+}
+
+/* Vertical rhythm for page sections: grows with the screen, 64px to 112px. */
+.section { padding-block: clamp(4rem, 9vw, 7rem); }
+
+/* ---------- 4. Components ---------- */
+
+/* Focus: Bootstrap shows a soft blurred glow. We use one crisp 2px accent outline instead.
+   Several Bootstrap components set "outline: 0", so they are listed here to win. */
+:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible,
+.navbar-toggler:focus-visible,
+.btn-close:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.form-check-input:focus-visible {
+  outline: 2px solid var(--tk-accent);
+  outline-offset: 2px;
+}
+
+/* Remove the glows themselves. !important also beats Bootstrap's stronger
+   valid/invalid focus rules. (Buttons turn theirs off through a variable, below.) */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.nav-link:focus-visible,
+.navbar-toggler:focus,
+.btn-close:focus { box-shadow: none !important; }
+
+/* Buttons. Bootstrap reads all button colours from --bs-btn-* variables, so we set those
+   and hover, active and disabled states keep working. */
+.btn {
+  --bs-btn-font-weight: 500;
+  --bs-btn-focus-box-shadow: none;
+}
+
+/* Accent button for actions inside the app ("Add task"). */
+.btn-primary {
+  --bs-btn-color: var(--tk-bg);              /* near-white on turquoise / near-black on light turquoise */
+  --bs-btn-bg: var(--tk-accent);
+  --bs-btn-border-color: var(--tk-accent);
+  --bs-btn-hover-color: var(--tk-bg);
+  --bs-btn-hover-bg: color-mix(in oklch, var(--tk-accent) 88%, var(--tk-text)); /* accent nudged toward the text colour */
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-active-color: var(--tk-bg);
+  --bs-btn-active-bg: var(--bs-btn-hover-bg);
+  --bs-btn-active-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-disabled-color: var(--tk-bg);
+  --bs-btn-disabled-bg: var(--tk-accent);
+  --bs-btn-disabled-border-color: var(--tk-accent);
+}
+
+/* Pill: the main call to action on marketing pages ("Open the board").
+   Filled with the text colour, so it's near-black in light mode and near-white in dark. */
+.btn-pill {
+  --bs-btn-padding-x: 1rem;
+  --bs-btn-border-radius: var(--tk-pill);
+  --bs-btn-color: var(--tk-bg);
+  --bs-btn-bg: var(--tk-text);
+  --bs-btn-border-color: var(--tk-text);
+  --bs-btn-hover-color: var(--tk-bg);
+  --bs-btn-hover-bg: color-mix(in oklch, var(--tk-text) 82%, var(--tk-bg)); /* a touch softer */
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-active-color: var(--tk-bg);
+  --bs-btn-active-bg: var(--bs-btn-hover-bg);
+  --bs-btn-active-border-color: var(--bs-btn-hover-bg);
+}
+
+/* Ghost pill: same shape, transparent, with a hairline that firms up on hover. */
+.btn-pill-ghost {
+  --bs-btn-padding-x: 1rem;
+  --bs-btn-border-radius: var(--tk-pill);
+  --bs-btn-color: var(--tk-text);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--tk-border);
+  --bs-btn-hover-color: var(--tk-text);
+  --bs-btn-hover-bg: var(--tk-surface);
+  --bs-btn-hover-border-color: color-mix(in oklch, var(--tk-muted) 50%, transparent);
+  --bs-btn-active-color: var(--tk-text);
+  --bs-btn-active-bg: var(--tk-surface);
+  --bs-btn-active-border-color: var(--bs-btn-hover-border-color);
+  --bs-btn-disabled-color: var(--tk-muted);  /* "All caught up": muted text, not faded out */
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--tk-border);
+  --bs-btn-disabled-opacity: 1;
+}
+/* Small pills: Bootstrap's .btn-sm sets padding first, so we restate the wider sides. */
+.btn-pill.btn-sm,
+.btn-pill-ghost.btn-sm { --bs-btn-padding-x: .75rem; }
+
+/* Icons: every icon is an inline Heroicons SVG made by Taskit.icon() in layout.js.
+   1em square, so it scales with the text around it, and it draws in currentColor, so it
+   is muted wherever the text is muted. vertical-align lines it up with the text. */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+.icon-lg { width: 1.25em; height: 1.25em; }
+
+/* Arrow link: accent text with a trailing icon (arrow-right, arrow-path...) that nudges
+   right on hover. The icon is an SVG after the text. The rules also reset <button> styling. */
+.link-arrow {
+  display: inline-flex;
+  width: fit-content; /* inside a flex column (.panel) it would stretch full width; this keeps the
+                         focus ring and the click area hugging the text */
+  align-items: center;
+  gap: .3em;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tk-accent);
+  text-decoration: none;
+}
+.link-arrow .icon { transition: transform .2s var(--tk-ease); }
+.link-arrow:hover { color: var(--tk-accent); }
+.link-arrow:hover .icon { transform: translateX(2px); }
+.link-arrow:focus-visible { text-decoration: underline; }
+.link-arrow:disabled { color: var(--tk-muted); cursor: default; }
+.link-arrow:disabled .icon { transform: none; }
+
+/* Form fields: a quiet hairline that only firms up on hover and turns accent on focus
+   (plus the focus outline above). Bootstrap's green/red valid/invalid borders are more
+   specific, so they still show. */
+.form-control,
+.form-select {
+  background-color: var(--tk-surface);
+  border-color: var(--tk-border);
+}
+.form-control:hover,
+.form-select:hover { border-color: color-mix(in oklch, var(--tk-muted) 50%, transparent); }
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus { border-color: var(--tk-accent); }
+
+/* Makes the scroll box the "containing block" for the hidden "Actions" header text
+   (.visually-hidden is position: absolute). Without it that text escapes the box and
+   makes the whole page scroll sideways on phones. */
+.table-responsive { position: relative; }
+
+/* Tooltips (only the Agents page uses them): a box in the text colour with page-colour
+   text, so it flips with the theme. Bootstrap's 90% opacity and arrow are dropped. */
+.tooltip {
+  --bs-tooltip-bg: var(--tk-text);
+  --bs-tooltip-color: var(--tk-bg);
+  --bs-tooltip-font-size: .75rem;
+  --bs-tooltip-border-radius: var(--tk-radius);
+  --bs-tooltip-padding-x: .5rem;
+  --bs-tooltip-padding-y: .3125rem;
+  --bs-tooltip-opacity: 1;
+  font-family: var(--bs-body-font-family); /* Bootstrap gives tooltips the system font */
+}
+.tooltip .tooltip-arrow { display: none; }
+
+/* Shared header: a thin bar with a solid background so the page doesn't show through
+   while it sticks, closed off by a hairline. */
+.site-header {
+  background-color: var(--tk-bg);
+  border-bottom: 1px solid var(--tk-border);
+}
+.site-header .navbar {
+  --bs-navbar-padding-y: .625rem;
+  --bs-navbar-color: var(--tk-muted);          /* links are muted... */
+  --bs-navbar-hover-color: var(--tk-text);     /* ...text colour on hover... */
+  --bs-navbar-active-color: var(--tk-text);    /* ...and on the current page */
+  --bs-navbar-brand-color: var(--tk-text);
+  --bs-navbar-brand-hover-color: var(--tk-text);
+  --bs-navbar-brand-font-size: 1rem;
+  --bs-navbar-toggler-border-color: var(--tk-border);
+}
+.site-header .navbar-brand { font-weight: 500; }
+/* The menu button on phones holds two Heroicons: "bars-3" while closed, "x-mark" while open.
+   Bootstrap flips aria-expanded on the button, so CSS can read it to pick the icon. */
+.site-header .navbar-toggler .icon { width: 1.5rem; height: 1.5rem; vertical-align: middle; }
+.site-header .navbar-toggler .icon:last-child,
+.site-header .navbar-toggler[aria-expanded="true"] .icon:first-child { display: none; }
+.site-header .navbar-toggler[aria-expanded="true"] .icon:last-child { display: inline-block; }
+
+/* Phones and tablets (below Bootstrap's lg breakpoint): the menu moves into thumb reach.
+   The button becomes a round pill fixed to the bottom-right corner, and the menu is a
+   panel fixed just above it. The panel's bottom edge is pinned, so when Bootstrap grows
+   its height from 0 it opens upwards. env(safe-area-inset-bottom) keeps both clear of
+   the iPhone home bar. */
+@media (max-width: 991.98px) {
+  .site-header .navbar-toggler {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--tk-pill);
+    border-color: var(--tk-text);
+    background-color: var(--tk-text);  /* filled like .btn-pill, so it reads on any page */
+    color: var(--tk-bg);
+  }
+  .site-header .navbar-toggler:hover { background-color: color-mix(in oklch, var(--tk-text) 82%, var(--tk-bg)); }
+  .site-header .navbar-collapse {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom)); /* 1rem gap + 3rem button + .5rem */
+    width: max-content;              /* hug the longest link ("Analytics") */
+    max-width: calc(100vw - 2rem);
+    padding: .25rem 1rem;
+    background-color: var(--tk-bg);
+    /* It floats over content with no shadow, so its edge is the firmer hover hairline. */
+    border: 1px solid color-mix(in oklch, var(--tk-muted) 50%, transparent);
+    border-radius: var(--tk-radius-lg);
+  }
+  /* The menu is right-aligned. The 2rem theme button centres a 1rem icon, so pull it right
+     by the .5rem gap to line the icon up with the end of the link text above it. */
+  .site-header .theme-toggle { margin-right: -.5rem; }
+  /* Room under the footer so the floating button never covers its last line. */
+  .site-footer { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+}
+.site-header .nav-link { font-size: .875rem; }
+/* The current page is text colour AND medium weight, so colour isn't the only signal. */
+.site-header .nav-link.active { font-weight: 500; }
+
+/* Theme toggle: a 32px ghost icon button. Muted until hovered. */
+.theme-toggle {
+  width: 2rem;
+  height: 2rem;
+  --bs-btn-color: var(--tk-muted);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--tk-text);
+  --bs-btn-hover-bg: var(--tk-surface);
+  --bs-btn-hover-border-color: var(--tk-border);
+  --bs-btn-active-color: var(--tk-text);
+  --bs-btn-active-bg: var(--tk-surface);
+  --bs-btn-active-border-color: var(--tk-border);
+}
+
+/* Shared footer: small muted text in four quiet columns. */
+.site-footer {
+  font-size: .875rem;
+  color: var(--tk-muted);
+  border-top: 1px solid var(--tk-border);
+}
+.footer-links { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.site-footer a:not(.footer-brand) { color: var(--tk-muted); text-decoration: none; }
+.site-footer a:not(.footer-brand):hover { color: var(--tk-text); }
+.footer-brand { color: var(--tk-text); font-weight: 500; text-decoration: none; }
+/* Social links ("GitHub ↗" with an SVG arrow): muted, text colour on hover. They are
+   styled here, not under .site-footer, because the Contact page reuses them. */
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  color: var(--tk-muted);
+  text-decoration: none;
+}
+.social-link:hover,
+.social-link:focus-visible { color: var(--tk-text); }
+
+/* ---------- 5. Layout patterns ---------- */
+
+/* Two-tone heading: a statement in the text colour, then its continuation in muted,
+   at the same size and weight. Reads as one sentence, ranks as two. */
+.lede {
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  max-width: 26ch;
+  text-wrap: pretty;
+}
+.lede-xl { font-size: clamp(2.25rem, 5vw, 3.5rem); max-width: 22ch; line-height: 1.1; }
+.lede-muted { color: var(--tk-muted); }
+
+/* Panel: a flat surface with a barely-there hairline. Title, one muted line, an arrow
+   link, then a stage that fills the rest of the height. Used instead of Bootstrap cards. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.25rem;
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+.panel-title { font-size: 1rem; font-weight: 500; letter-spacing: -0.01em; margin-bottom: .25rem; }
+/* .intro-text is the same muted paragraph outside a panel (the About page's purpose text),
+   kept to a readable line length. */
+.panel-text,
+.intro-text { font-size: 1.0625rem; color: var(--tk-muted); }
+.panel-text { margin-bottom: .75rem; }
+.intro-text { max-width: 60ch; }
+/* A panel's top row: title (and a muted line) on the left, a small button on the right. */
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .75rem; }
+.panel > .stage { flex-grow: 1; margin-top: 1.25rem; }
+
+/* Stage: a recessed area that holds a small piece of real-looking UI, centred. */
+.stage {
+  display: grid;
+  place-items: center;
+  min-height: 16rem;
+  padding: 1.5rem;
+  overflow: hidden;
+  background-color: var(--tk-stage);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+/* The big one under the hero. Padding grows with the screen so the window floats. */
+.stage-hero { min-height: 28rem; padding: clamp(.75rem, 4vw, 3.5rem); }
+/* A small one, only as tall as what it holds (the skills list on the Agents page). */
+.stage-compact { min-height: 0; }
+
+/* Window: a fake app window, live from the store (built by home.js). */
+.window {
+  width: 100%;
+  max-width: 62rem;
+  background-color: var(--tk-raised);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+  overflow: hidden;
+}
+/* Title bar: dots on the left, title in the middle, action on the right.
+   "1fr auto 1fr" keeps the title centred whatever the sides hold. */
+.window-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: .75rem;
+  min-height: 2.75rem;
+  padding: .375rem .5rem .375rem .875rem;
+  border-bottom: 1px solid var(--tk-border);
+}
+.window-dots { display: flex; gap: 6px; }
+.window-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: color-mix(in oklch, var(--tk-muted) 35%, transparent);
+}
+.window-title { font-size: .8125rem; color: var(--tk-muted); }
+.window-bar > .btn { justify-self: end; white-space: nowrap; }
+/* Body: one column on phones, two panes from 768px. Panes are split by a hairline. */
+.window-body { display: grid; grid-template-columns: minmax(0, 1fr); }
+.window-pane { padding: 1.25rem; min-width: 0; }
+.window-pane + .window-pane { border-top: 1px solid var(--tk-border); }
+@media (min-width: 768px) {
+  .window-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); min-height: 22rem; }
+  .window-pane + .window-pane { border-top: 0; border-left: 1px solid var(--tk-border); }
+}
+.window-heading { font-size: 1.25rem; margin-bottom: .25rem; }
+.window-sub { font-size: .8125rem; color: var(--tk-muted); margin-bottom: .75rem; }
+
+/* Fake prompt box in the "Agent run" pane. */
+.prompt {
+  padding: .75rem .875rem;
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+.prompt-text { margin-bottom: .75rem; }
+/* The task's description under its name, like the rest of a typed prompt. */
+.prompt-detail { display: block; margin-top: .25rem; font-size: .8125rem; color: var(--tk-muted); }
+.prompt-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .8125rem;
+  color: var(--tk-muted);
+}
+.prompt-send {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--tk-border);
+  border-radius: 50%;
+  font-size: .75rem;
+}
+
+/* The agent's step log under the prompt: small, muted, one line each ("Started · 2 min ago"). */
+.steps {
+  list-style: none;
+  display: grid;
+  gap: .375rem;
+  margin: 1rem 0;
+  padding: 0;
+  font-size: .8125rem;
+  color: var(--tk-muted);
+}
+.steps li { display: flex; align-items: center; gap: .5rem; }
+/* The bullet before each step: a 4px muted dot (a plain CSS shape, not an icon). */
+.step-dot { width: 4px; height: 4px; flex-shrink: 0; border-radius: 50%; background-color: var(--tk-muted); }
+
+/* Chip: a small mono tag on a stage fill, like a file name or a date. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  padding: .3125rem .5rem;
+  font-family: var(--bs-font-monospace);
+  font-size: .75rem;
+  line-height: 1;
+  color: var(--tk-text);
+  background-color: var(--tk-stage);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+}
+
+/* Row list: rows split by hairlines. Icon, then the main text with muted meta under it. */
+.row-list { list-style: none; margin: 0; padding: 0; }
+.row-list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: .625rem 0;
+  border-top: 1px solid var(--tk-border);
+}
+.row-list > li:first-child { border-top: 0; }
+.row-main { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.row-meta { display: block; font-size: .8125rem; color: var(--tk-muted); }
+.row-done .row-main { color: var(--tk-muted); }  /* finished work steps back */
+/* The icon box: 14px, nudged down to sit on the first line of text (24px line). */
+.row-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  margin-top: 5px;
+  color: var(--tk-muted);
+  font-size: 14px;
+  line-height: 1;
+}
+.row-icon.is-todo { border: 1.5px solid var(--tk-muted); border-radius: 50%; }      /* hollow circle */
+.row-icon.is-working { border: 1.5px solid var(--tk-accent); border-radius: 50%; }  /* holds the pulsing dot */
+/* Faint last row that invites an action ("Add a task… N"). */
+.row-add { color: var(--tk-muted); text-decoration: none; display: flex; align-items: center; gap: .5rem; }
+.row-add:hover { color: var(--tk-text); }
+
+/* Key cap. Replaces Bootstrap's dark <kbd> look with a quiet outlined one. */
+.kbd {
+  display: inline-block;
+  min-width: 1.25rem;
+  padding: 0 .3rem;
+  font-family: var(--bs-font-monospace);
+  font-size: .6875rem;
+  line-height: 1.125rem;
+  text-align: center;
+  color: var(--tk-muted);
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: 4px;
+}
+
+/* Tile strip: four equal tiles. Two columns by default (a 2×2 grid) and one row of four
+   on wide screens, so the four agents never split 3 + 1. */
+.tile-strip {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 992px) { /* Bootstrap's lg breakpoint */
+  .tile-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 6rem;
+  padding: 1rem;
+  text-align: center;
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+
+/* Stage fragments: the small pieces of UI that sit on a stage. */
+.fragment {
+  width: min(100%, 19rem);
+  padding: .375rem;
+  font-size: .875rem;
+  background-color: var(--tk-raised);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+.fragment .row-list > li { padding-inline: .5rem; }
+/* Agent picker: a dropdown-like list with a check on the chosen agent. */
+.picker-head { padding: .375rem .5rem .25rem; font-size: .75rem; color: var(--tk-muted); }
+.picker-list { list-style: none; margin: 0; padding: 0; }
+.picker-list li {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .4375rem .5rem;
+  border-radius: var(--tk-radius);
+}
+.picker-list li.is-selected { background-color: var(--tk-stage); }
+.picker-role {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .8125rem;
+  color: var(--tk-muted);
+}
+.picker-list .icon { margin-left: auto; }
+/* Mini board: three columns with a count and up to four placeholder cards each. */
+.mini-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; width: 100%; }
+.mini-col {
+  display: grid;
+  align-content: start;
+  gap: .375rem;
+  min-height: 11rem;
+  padding: .375rem;
+  background-color: var(--tk-raised);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+/* Count on top in the text colour, column name under it. The name may wrap ("In progress"
+   in a narrow column) without knocking the counts out of line across the three columns. */
+.mini-head { display: grid; margin-bottom: .25rem; font-size: .6875rem; line-height: 1.3; color: var(--tk-muted); }
+.mini-count { font-size: 1rem; color: var(--tk-text); }
+.mini-card {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  height: 1.5rem;
+  padding: 0 .5rem;
+  background-color: var(--tk-stage);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+}
+/* A grey line standing in for the card's title text. */
+.mini-card::after { content: ""; height: 4px; width: 70%; border-radius: 2px; background-color: var(--tk-border); }
+.mini-more { font-size: .75rem; color: var(--tk-muted); }
+
+/* ---------- 6. App pages: Tasks, Analytics and Agents ---------- */
+
+/* Stat strip: three numbers side by side, split by hairlines instead of boxed in cards.
+   It is a <dl>: each .stat holds a <dt> label and a <dd> number. */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-block: 1px solid var(--tk-border);
+}
+.stat { padding: 1rem 1.25rem; }
+.stat:first-child { padding-left: 0; }  /* the first number lines up with the heading */
+.stat + .stat { border-left: 1px solid var(--tk-border); }
+.stat-value {
+  margin: .25rem 0 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* Pill control: a small rounded box holding a muted prefix ("Priority") and a borderless
+   select or date input. Used in the composer, the toolbar and on the board cards. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  max-width: 100%; /* never wider than its row: a long agent name shrinks instead (see below) */
+  height: 2rem;
+  padding: 0 .75rem;
+  font-size: .8125rem;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-pill);
+  transition: border-color .15s var(--tk-ease);
+}
+.pill:hover { border-color: color-mix(in oklch, var(--tk-muted) 50%, transparent); }
+/* The keyboard focus ring goes round the whole pill, not round the select inside it. */
+.pill:has(:focus-visible) { outline: 2px solid var(--tk-accent); outline-offset: 2px; }
+.pill :focus-visible { outline: none; }
+.pill-prefix { display: inline-flex; align-items: center; color: var(--tk-muted); white-space: nowrap; }
+/* The select or date inside: no box of its own, the pill is the box. */
+.pill-select,
+.pill-date {
+  appearance: none;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tk-text);
+  font: inherit;
+  cursor: pointer;
+}
+/* Room on the right for the chevron, which is pulled back over that space.
+   pointer-events: none lets a click on the chevron reach the select underneath. */
+/* When the pill is squeezed, the select (min-width: 0 above) shrinks and cuts its text
+   with "…" instead of pushing out of the composer. */
+.pill-select {
+  padding-right: 1.25rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pill-chevron { margin-left: -1.375rem; color: var(--tk-muted); pointer-events: none; }
+/* Some systems draw the open option list in the select's own colours: give it solid ones. */
+.pill-select option { background-color: var(--tk-bg); color: var(--tk-text); }
+/* An empty date is still invalid, so its dd/mm/yyyy hint shows in muted, like a placeholder. */
+.pill-date { position: relative; }
+.pill-date:invalid { color: var(--tk-muted); }
+/* Chrome's own calendar button: invisible and stretched over the whole field, so a click
+   anywhere on the date opens the picker. Our calendar icon is the one you see. */
+.pill-date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Composer: the add / edit form as one box, like a chat prompt. The name and the details
+   have no borders of their own; the box's border turns accent while you are in it. */
+.composer {
+  padding: .875rem 1rem .75rem;
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+  transition: border-color .15s var(--tk-ease);
+}
+.composer:focus-within { border-color: var(--tk-accent); }
+.composer-name,
+.composer-detail {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tk-text);
+}
+/* The accent border above is the focus signal for these two, so no second ring. */
+.composer-name:focus-visible,
+.composer-detail:focus-visible { outline: none; }
+.composer-name { font-size: 1.125rem; }
+.composer-detail {
+  margin-top: .375rem;
+  font-size: .9375rem;
+  resize: none;
+  min-height: 3rem;
+  max-height: 12rem;
+  field-sizing: content; /* grows with the text (newer browsers; others keep rows="2" and scroll) */
+}
+.composer-name::placeholder,
+.composer-detail::placeholder,
+.search-input::placeholder { color: var(--tk-muted); opacity: 1; }
+/* Bottom bar: pills on the left, buttons pushed right. Wraps onto more lines on phones. */
+.composer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+.composer-actions { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+/* Round send button with the arrow-up icon. Its colours come from .btn-primary (accent). */
+.composer-send {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+}
+/* After a failed submit Bootstrap adds .was-validated to the form: red borders on the
+   composer or pill that holds an invalid field. */
+.was-validated .composer:has(.composer-name:invalid, .composer-detail:invalid),
+.was-validated .pill:has(:invalid) { border-color: var(--tk-danger); }
+/* Bootstrap only shows an .invalid-feedback placed right after its field. Ours sit under the
+   composer, so :has() asks the form whether that field is invalid instead. */
+.composer-errors .invalid-feedback { margin: .375rem 0 0; }
+/* :has() works in every current browser (Chrome 105+, Safari 15.4+, Firefox 121+). In an older
+   one the messages just don't appear; invalid fields still block the submit (validateForm). */
+.was-validated:has(#task-name:invalid) .error-name,
+.was-validated:has(#task-description:invalid) .error-detail,
+.was-validated:has(#task-due:invalid) .error-due { display: block; }
+
+/* Toolbar: search, then the filter and sort pills, on one row that wraps on phones. */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+/* The search box is a wider pill: icon, input, and a "/" key cap that hides once you're in. */
+.search-field { flex: 1 1 14rem; max-width: 22rem; padding-right: .375rem; color: var(--tk-muted); }
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tk-text);
+  font: inherit;
+}
+.search-field:focus-within .kbd { display: none; }
+/* Phones: iPhones zoom the whole page into any field whose text is under 16px, so the
+   fields go up to 16px there (the pills grow a little to fit). */
+@media (max-width: 767.98px) {
+  .pill,
+  .composer-detail { font-size: 1rem; }
+  .pill { height: 2.25rem; }
+}
+
+/* Task table: Bootstrap's own table, re-coloured through its variables. Rows are split by
+   hairlines, and tint to the surface colour on hover (.table-hover). */
+.task-table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--tk-text);
+  --bs-table-border-color: var(--tk-border);
+  --bs-table-hover-bg: var(--tk-surface);
+  --bs-table-hover-color: var(--tk-text);
+}
+.task-table > :not(caption) > * > * { padding: .75rem; font-size: .875rem; }
+.task-table > thead th { padding-block: .5rem; font-size: .75rem; white-space: nowrap; }
+/* Tablets: tighter sides so all six columns, actions included, fit without scrolling. */
+@media (max-width: 991.98px) {
+  .task-table > :not(caption) > * > * { padding-inline: .5rem; }
+}
+.task-table caption { padding: .75rem 0 0; font-size: .8125rem; color: var(--tk-muted); }
+.task-cell { min-width: 13rem; max-width: 32rem; }
+.task-name { display: block; font-size: 1rem; }  /* the name is the one thing in a row at full size */
+.task-detail { display: block; margin-top: .125rem; font-size: .8125rem; color: var(--tk-muted); }
+.task-row.is-done .task-name { color: var(--tk-muted); } /* finished work steps back; no strikethrough */
+.task-table .task-empty { padding: 1.5rem .75rem; color: var(--tk-muted); }
+
+/* Status (icon + word) and priority (shape + word). The word always carries the meaning. */
+.status,
+.prio { display: inline-flex; align-items: center; gap: .5rem; }
+.status .row-icon { margin-top: 0; }
+.prio-dot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; }
+.prio-dot.is-high { background-color: var(--tk-prio-high); }     /* filled coral */
+.prio-dot.is-medium { background-color: var(--tk-prio-medium); } /* filled amber */
+.prio-dot.is-low { border: 1.5px solid var(--tk-muted); }        /* hollow grey ring */
+
+/* Small ghost icon button (the row actions): muted icon, a hairline box on hover. */
+.btn-icon {
+  --bs-btn-padding-x: 0;
+  --bs-btn-padding-y: 0;
+  --bs-btn-color: var(--tk-muted);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--tk-text);
+  --bs-btn-hover-bg: var(--tk-bg);
+  --bs-btn-hover-border-color: var(--tk-border);
+  --bs-btn-active-color: var(--tk-text);
+  --bs-btn-active-bg: var(--tk-bg);
+  --bs-btn-active-border-color: var(--tk-border);
+  --bs-btn-disabled-color: var(--tk-muted);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: transparent;
+  --bs-btn-disabled-opacity: .35;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+}
+/* Delete turns red when you point at it or tab to it: red means "this destroys something". */
+.btn-icon-danger:hover,
+.btn-icon-danger:focus-visible { --bs-btn-color: var(--tk-danger); --bs-btn-hover-color: var(--tk-danger); }
+
+/* Analytics charts. Both are lists of rows split by hairlines, like the rest of the site. */
+/* Completed vs pending: each row is label | thin track with its fill | count and percentage. */
+.hbars { margin-top: .5rem; }
+.hbar {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 5.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: .75rem 0;
+  border-top: 1px solid var(--tk-border);
+}
+.hbar:first-child { border-top: 0; }
+.hbar-track { height: 6px; overflow: hidden; border-radius: 3px; background-color: var(--tk-border); }
+.hbar-fill { display: block; height: 100%; border-radius: 3px; } /* width is set inline by analytics.js */
+.hbar-fill.is-done { background-color: var(--tk-text); }
+.hbar-fill.is-pending { background-color: var(--tk-muted); }
+.hbar-value { display: flex; justify-content: flex-end; gap: .75rem; font-size: .875rem; }
+
+/* By priority: one bar split into rounded segments with 2px gaps. analytics.js sets each
+   segment's flex-grow to its count, so the widths follow the counts. */
+.seg-bar { display: flex; gap: 2px; height: 12px; margin-top: 1.25rem; }
+.seg-bar:empty { border-radius: 6px; background-color: var(--tk-border); } /* no tasks: an empty track */
+.seg { flex-basis: 0; min-width: 12px; border-radius: 6px; }
+.seg.is-high { background-color: var(--tk-prio-high); }     /* same colours as the dots */
+.seg.is-medium { background-color: var(--tk-prio-medium); }
+.seg.is-low { background-color: var(--tk-border); border: 1px solid var(--tk-muted); }
+/* Legend under it: shape and word | count | percentage. */
+.legend { list-style: none; margin: 1rem 0 0; padding: 0; }
+.legend li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 3.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: .5rem 0;
+  font-size: .875rem;
+  border-top: 1px solid var(--tk-border);
+}
+.legend li:first-child { border-top: 0; }
+.legend li > :last-child { text-align: right; }
+.legend .legend-empty { display: block; color: var(--tk-muted); }
+
+/* Kanban board: three recessed columns (like a .stage) holding raised cards.
+   One column under another on phones, three side by side from 768px. */
+.board { display: grid; gap: .75rem; }
+@media (min-width: 768px) {
+  .board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.board-col {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-height: 16rem;
+  padding: .5rem;
+  background-color: var(--tk-stage);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+}
+/* The column a card is being dragged over. */
+.board-col.drag-over { outline: 1px dashed var(--tk-accent); outline-offset: -1px; }
+.board-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding: .375rem .5rem .25rem;
+  font-size: .875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.board-card {
+  padding: .75rem;
+  background-color: var(--tk-raised);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  cursor: grab;
+  transition: transform .15s var(--tk-ease), opacity .15s var(--tk-ease);
+}
+/* The card being dragged shrinks a touch and fades, so you can see where it came from. */
+.board-card.dragging { transform: scale(.98); opacity: .6; }
+.board-card-title {
+  display: flex;
+  gap: .5rem;
+  margin: 0 0 .25rem;
+  font-size: .9375rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.board-card-title .dot-working { margin-top: .45rem; } /* centres the dot on the first line */
+.board-card.is-done .board-card-title { color: var(--tk-muted); }
+/* Meta line: three pieces ("Athena", "· 20 Oct", "· ● High") that wrap as whole pieces,
+   so a "·" never ends up alone at the end of a line. */
+.board-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: .375rem;
+  margin: 0 0 .5rem;
+  font-size: .8125rem;
+  color: var(--tk-muted);
+}
+.board-card-meta > span { white-space: nowrap; }
+/* The "·" between pieces is drawn here, so the space on both sides of it is the same. */
+.board-card-meta > span + span::before { content: "·"; margin-right: .375rem; }
+.board-card-meta .prio { gap: .375rem; }
+.board-empty { margin: 0; padding: .5rem; font-size: .8125rem; color: var(--tk-muted); }
+/* Ghost pill (the card's move menu): no border until you point at it. */
+.pill-ghost { height: 1.75rem; margin-left: -.5rem; padding: 0 .5rem; border-color: transparent; }
+.pill-ghost .pill-select { color: var(--tk-muted); }
+
+/* Agents page: one .panel per agent. */
+/* Top row: icon square | name with the role under it | Working or Idle, pushed right. */
+.agent-head { display: flex; align-items: center; gap: .75rem; }
+.agent-name { flex: 1 1 auto; min-width: 0; }
+.agent-role { margin: 0; font-size: .8125rem; color: var(--tk-muted); }
+/* The agent's icon in a small square: a hairline and the small radius, no colour fill. */
+.agent-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.125rem; /* the icon is 1em, so this sets its size */
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+}
+.agent-state { font-size: .8125rem; white-space: nowrap; }
+.agent-state.is-idle { color: var(--tk-muted); }
+/* "2 of 3 completed · 67%", small and muted, just above the bar. */
+.agent-count { margin: 1.25rem 0 .5rem; font-size: .75rem; color: var(--tk-muted); }
+/* Bootstrap's progress bar, made thin through its own variables: a 4px track in the
+   hairline colour and a fill in the text colour, like the bars on the Analytics page. */
+.agent-progress {
+  --bs-progress-height: 4px;
+  --bs-progress-bg: var(--tk-border);
+  --bs-progress-border-radius: 2px;
+  --bs-progress-bar-bg: var(--tk-text);
+}
+/* Bootstrap's list group, re-coloured through its variables into our row style: no fill,
+   hairlines between rows (list-group-flush already drops the outer border). */
+.skill-list {
+  --bs-list-group-bg: transparent;
+  --bs-list-group-color: var(--tk-text);
+  --bs-list-group-border-color: var(--tk-border);
+  --bs-list-group-item-padding-x: .5rem;
+  --bs-list-group-item-padding-y: .25rem;
+}
+/* Skill name on the left, the info button on the right. */
+.skill-list .list-group-item { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.agent-link { margin-top: 1.25rem; }
+
+/* ---------- 7. Motion ---------- */
+/* Only opacity and transform move (cheap for the browser), and all of it switches off
+   under "reduce motion" in section 10. */
+
+/* Reveal on scroll. layout.js only adds html.js-reveal when the browser supports it and
+   the user hasn't asked for less motion. It then marks sections that start below the
+   screen as "is-waiting" and removes that when they scroll in. Anything on screen at
+   load is never hidden, so content is visible by default. */
+.js-reveal .reveal { transition: opacity .6s var(--tk-ease), transform .6s var(--tk-ease); }
+.js-reveal .reveal.is-waiting { opacity: 0; transform: translateY(8px); }
+
+/* Working: a 6px accent dot that softly pulses. */
+.dot-working {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--tk-accent);
+  animation: tk-pulse 1.6s var(--tk-ease) infinite;
+}
+@keyframes tk-pulse { 50% { opacity: .3; } }
+
+/* Done: a filled muted circle with a check. pathLength="1" on the <path> lets a dash of
+   length 1 cover the whole stroke, so animating the offset from 1 to 0 "draws" it. */
+.check-draw { width: 14px; height: 14px; }
+.check-draw circle { fill: var(--tk-muted); }
+.check-draw path {
+  fill: none;
+  stroke: var(--tk-raised);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+}
+.check-draw.is-new path { animation: tk-draw .3s var(--tk-ease) .1s both; }
+@keyframes tk-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* New task: its table row starts with a surface tint that fades out once. A keyframe with
+   only "from" animates back to the row's normal (transparent) background. */
+.task-row.is-new > td { animation: tk-flash 1.2s var(--tk-ease); }
+@keyframes tk-flash { from { background-color: var(--tk-surface); } }
+
+/* ---------- 8. About page ---------- */
+
+/* Team member panels: the avatar image (a rounded square drawn inside the SVG), then the
+   name, the role as a small label and a one-line bio. */
+.member-avatar { display: block; margin-bottom: 1rem; border-radius: var(--tk-radius-lg); }
+.member-bio { margin: 0; font-size: .875rem; color: var(--tk-muted); }
+
+/* Testimonials. Each slide is a two-tone quote at heading size (.lede): the quote in the
+   text colour, then who said it in muted, running on as one sentence. */
+/* min-height holds room for the longest quote (3 lines on wide screens, 5 on phones), so the
+   panel doesn't change height, and push the page around, each time the slide changes. */
+.quote { max-width: 40ch; min-height: 3.45em; margin: 0; }
+@media (max-width: 575.98px) {
+  .quote { min-height: 5.75em; }
+}
+.quote blockquote,
+.quote p,
+.quote figcaption { display: inline; margin: 0; }
+/* Under the quote: slide bars on the left, previous / next buttons on the right. */
+.carousel-foot { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+/* Bootstrap places the slide bars over the slide; here they sit in the row above instead.
+   ".testimonials.carousel" is specific enough to beat Bootstrap's own
+   "[data-bs-theme=dark] .carousel ..." rules. */
+.testimonials.carousel .carousel-indicators { position: static; justify-content: flex-start; margin: 0; }
+.testimonials.carousel .carousel-indicators [data-bs-target] {
+  width: 16px;
+  height: 2px;
+  margin: 0;
+  border: solid transparent;   /* invisible border: the bar stays 16 × 2, but the button */
+  border-width: 11px 4px;      /* you can click or tap is 24 × 24 */
+  background-color: var(--tk-muted); /* muted, not the hairline colour: a control must stay visible (3:1) */
+  opacity: 1;
+}
+/* The current slide's bar is text colour AND longer, so colour isn't the only difference. */
+.testimonials.carousel .carousel-indicators .active { width: 24px; background-color: var(--tk-text); }
+
+/* GitHub commits: each row is a link to the commit on github.com, in the text colour
+   (not accent) with a muted arrow at the end. Pointing at it underlines the message. */
+.commit-link { display: flex; flex: 1 1 auto; min-width: 0; gap: .75rem; color: var(--tk-text); text-decoration: none; }
+.commit-link > .icon { margin-top: .3125rem; color: var(--tk-muted); }
+.commit-link:hover { color: var(--tk-text); }
+.commit-link:hover .commit-message { text-decoration: underline; text-underline-offset: .2em; }
+.commit-link:hover > .icon { color: var(--tk-text); }
+
+/* ---------- 9. Contact page ---------- */
+
+/* The form: one rounded surface, like the Tasks composer. Its border turns accent while
+   any field inside has focus. */
+.contact-form {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  background-color: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+  transition: border-color .15s var(--tk-ease);
+  --bs-form-valid-border-color: var(--tk-border); /* see the validation rules below */
+}
+.contact-form:focus-within { border-color: var(--tk-accent); }
+/* The fields use the page colour, one step away from the box, so they read as wells to type
+   into. It is also the colour Bootstrap gives a field on focus, so focusing doesn't flicker. */
+.contact-form .form-control { background-color: var(--tk-bg); }
+
+/* After a failed submit Bootstrap paints valid fields green and puts a tick or "!" picture
+   inside every field. Here only the problem fields change: a red border and the message
+   under them. The valid border colour is reset through the variable above; these rules
+   drop the pictures and the right padding that made room for them. */
+.contact-form.was-validated .form-control:valid,
+.contact-form.was-validated .form-control:invalid {
+  padding-right: .75rem;
+  background-image: none;
+}
+
+/* Right column: three quiet blocks (office, map, social) split by hairlines, not boxed. */
+.contact-block + .contact-block {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--tk-border);
+}
+
+/* The map sits edge to edge in a stage: the stage gives the hairline and the 10px rounded
+   corners, and its overflow: hidden clips the iframe's square corners to match. */
+.stage-map { display: block; min-height: 0; padding: 0; }
+/* On tablets the map spans the full page width, where 4:3 would make it over 500px tall.
+   Bootstrap's .ratio reads its shape from --bs-aspect-ratio, so it becomes 16:9 there. */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .stage-map .ratio { --bs-aspect-ratio: 56.25%; }
+}
+/* Dark mode only: a visual-only treatment of a third-party frame. We can't restyle Google's
+   map, so the whole iframe is inverted (and the colours turned back with hue-rotate) to sit
+   in the dark page instead of glaring white. */
+[data-bs-theme="dark"] .stage-map iframe { filter: invert(.9) hue-rotate(180deg) saturate(.6); }
+
+/* Confirmation modal: Bootstrap's modal recoloured through its own variables. A flat surface
+   with a hairline and the large radius, hairlines above and below the body. */
+.modal {
+  --bs-modal-bg: var(--tk-surface);
+  --bs-modal-border-color: var(--tk-border);
+  --bs-modal-border-radius: var(--tk-radius-lg);
+  --bs-modal-inner-border-radius: calc(var(--tk-radius-lg) - 1px); /* header/footer corners, inside the 1px border */
+  --bs-modal-header-padding: 1rem 1.25rem;
+  --bs-modal-header-border-color: var(--tk-border);
+  --bs-modal-padding: 1.25rem;
+  --bs-modal-footer-border-color: var(--tk-border);
+}
+/* The page behind is only slightly dimmed (Bootstrap's default is 50%). */
+.modal-backdrop { --bs-backdrop-opacity: .4; }
+
+/* The captured values: a <dl> of rows split by hairlines, label above, value under it.
+   pre-wrap keeps the line breaks typed in the message; anywhere breaks long unbroken text. */
+.detail-list { margin: 0; }
+.detail-list > div { padding: .75rem 0; border-top: 1px solid var(--tk-border); }
+.detail-list > div:first-child { padding-top: 0; border-top: 0; }
+.detail-list > div:last-child { padding-bottom: 0; }
+.detail-list dd { margin: .125rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- 10. Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .link-arrow .icon,
+  .pill,
+  .composer,
+  .contact-form,
+  .board-card,
+  .js-reveal .reveal { transition: none; }
+  .js-reveal .reveal.is-waiting { opacity: 1; transform: none; }  /* belt and braces: never hidden */
+  .dot-working,
+  .check-draw.is-new path,
+  .task-row.is-new > td { animation: none; }
+}
