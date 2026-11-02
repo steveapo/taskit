@@ -5,12 +5,12 @@ Taskit is a small task manager for teams that hand routine work to AI agents. Yo
 ## Links
 
 - GitHub repository: https://github.com/steveapo/taskit
-- Live site (optional, GitHub Pages): _add if enabled_
+- Live site: 
 
 ## How to run
 
-- Open `index.html` in a browser. No build step and no server are needed: the site works straight from disk (`file://`). An internet connection is needed for Bootstrap, the fonts, the GitHub feed and the map.
-- To run the automated tests, open `tests/tests.html`. The tab title shows `PASS 23/23` when every test passes.
+- Open `index.html` in a browser,there are no build step and no server requirements: the site works straight from local harddrive. An internet connection is needed for Bootstrap, the fonts, the GitHub feed and the map, but it is otherwise runable either way.
+- To run the automated tests, open `tests/tests.html`, the title shows `PASS 23/23` when every test passes.
 
 ## The task allocation system
 
@@ -38,7 +38,7 @@ The four agents are fixed in code (`AGENTS` in `store.js`); users assign tasks t
 
 ### Assigning
 
-The Agent menu in the Tasks form is filled from `store.AGENTS`, so a task is assigned when it is created and can be reassigned through Edit. The store never trusts the form: `clean()` checks every field again, and an unknown agent or priority falls back to Athena or Medium. New tasks always start as To do.
+The Agent menu in the Tasks form is filled from `store.AGENTS` so a task is assigned when it is created and can be reassigned through Edit. The store never trusts the form: `clean()` checks every field again, and an unknown agent or priority falls back to Athena or Medium. New tasks always start as To do, and can then be changed to reflect the true status (future update could be adding a dropdown for the status on creation).
 
 ### The simulation
 
@@ -46,11 +46,11 @@ The Agent menu in the Tasks form is filled from `store.AGENTS`, so a task is ass
 
 1. Only a To do task can be run, so the Run button is disabled for any other status.
 2. The task moves to In progress, and the log records "started".
-3. After 4 seconds the simulation reads the task **again** instead of trusting its old copy.
+3. After 4 seconds (hardcoded for demo) the simulation reads the task **again** instead of trusting its old copy.
 4. If the task was deleted or moved in the meantime, the run is abandoned, so the simulation never overrides the user.
 5. Otherwise the task becomes Completed, and the log records "completed".
 
-The timer only lives as long as the page: if the user leaves mid-run, the task stays In progress and can be finished by hand.
+The timer only lives as long as the page so if the user leaves mid-run, the task stays In progress and can be finished by hand.
 
 ### Status changes
 
@@ -67,6 +67,7 @@ Every change (added, edited, deleted, started, completed, moved) adds one entry,
 | `taskit.tasks` | `localStorage` | the task array (JSON) |
 | `taskit.activity` | `localStorage` | the activity log (JSON) |
 | `taskit.theme` | `localStorage` | `light` or `dark`, once the toggle is used |
+| `taskit.view` | `localStorage` | `list` or `board`, the Tasks page view, once the switch is used |
 | `taskit.github.<owner/repo>` | `sessionStorage` | the 5-minute GitHub feed cache |
 
 On a first visit the store seeds six sample tasks across the four agents, priorities and statuses (due dates relative to today) plus three log entries. If storage is blocked or the saved JSON is corrupt, `load()` catches the error, seeds the same data in memory and sets `store.persistent` to `false`; the site keeps working and `layout.js` shows a dismissible warning that changes won't be kept.
@@ -78,8 +79,8 @@ On a first visit the store seeds six sample tasks across the four agents, priori
 | File | Purpose |
 |---|---|
 | `index.html` | Home: hero, live app window, feature panels, agents strip |
-| `tasks.html` | Tasks: counts, add/edit form, toolbar, table, Latest activity |
-| `analytics.html` | Analytics: counts, two CSS charts, Kanban board |
+| `tasks.html` | Tasks: counts, add/edit form, toolbar, List / Board switch (table or Kanban board), Latest activity |
+| `analytics.html` | Analytics: counts, two CSS charts, simulated usage |
 | `agents.html` | Agents (page of choice): live workload and skills per agent |
 | `about.html` | About: purpose, team, testimonial carousel, GitHub activity |
 | `contact.html` | Contact: validated form, confirmation modal, map, social links |
@@ -89,6 +90,7 @@ On a first visit the store seeds six sample tasks across the four agents, priori
 | `js/ui.js` | shared snippets: status, priority, dates, agent names, count strip |
 | `js/agent-sim.js` | the simulated agent run |
 | `js/activity.js` | the Latest activity feed and `timeAgo()` |
+| `js/kanban.js` | the Kanban board behind the Tasks page's Board view |
 | `js/tasks.js`, `home.js`, `analytics.js`, `agents.js`, `about.js`, `contact.js` | one script per page |
 | `js/github.js` | About: latest commits from the GitHub REST API |
 | `tests/tests.html` | 23 automated tests (not linked from the site) |
@@ -122,7 +124,7 @@ Each file is an immediately invoked function with `'use strict'` that adds its p
 
 `js/layout.js` injects the header and footer, so the navigation lives in one array and the current link gets `aria-current="page"`. It also applies dark mode, provides `Taskit.icon(name)`, and holds the form helpers both forms use: `validateForm(form)`, `linkErrors(form, { fieldId: errorId })` (sets `aria-invalid` and `aria-describedby` only while a field is invalid) and `clearValidation(form)`.
 
-`js/ui.js` (`Taskit.ui`) holds the snippets several pages draw the same way, so each is written once: `statusIcon()` and `statusHtml()` (circle, pulsing dot or check, plus the word), `priorityHtml()`, `dueHtml()` and `shortDate()` ("20 Oct", showing a broken saved date as it is), `agentName()`, and `renderCounts()` for the Total / Pending / Completed strip. Anything from the store is escaped before it goes into the HTML.
+`js/ui.js` (`Taskit.ui`) holds the snippets several pages draw the same way, so each is written once: `statusIcon()` and `statusHtml()` (circle, pulsing dot or check and the word), `priorityHtml()`, `dueHtml()` and `shortDate()` ("20 Oct", showing a broken saved date as it is), `agentName()`, and `renderCounts()` for the Total / Pending / Completed strip. Anything from the store is escaped before it goes into the HTML.
 
 ## Coding decisions: Tasks page
 
@@ -241,7 +243,7 @@ The visual direction was inspired by modern developer-tool websites: hairline bo
 
 - **Heroicons** are inlined as SVG by `Taskit.icon()`, because Chrome blocks external SVG sprites on `file://`.
 - **Analytics charts** need no library: bars are `<span>`s with a percentage width, and the priority chart is one segmented bar (each segment's `flex-grow` is its count) instead of a pie, because lengths are easier to compare than angles. Both have their numbers in an `aria-label`.
-- **The Kanban board** keeps its drag listeners on the board container, so redraws never lose them. Drag-and-drop fails for keyboard and most touch users, so every card also has a "Move to" `<select>`, and focus returns to it after the redraw.
+- **The Kanban board** is the Tasks page's second view: a List / Board switch in the toolbar shows either the table or the board, both drawn from the same searched, filtered and sorted tasks, and the choice is remembered in `localStorage`. It keeps its drag listeners on the board container, so redraws never lose them. Drag-and-drop fails for keyboard and most touch users, so every card also has a "Move to" `<select>`, and focus returns to it after the redraw.
 - **Home** has a live app window with a "Run an agent" button; **About** has a carousel pause button (WCAG 2.2.2); **Contact** reuses the shared validation, shows what was typed in a modal (nothing is sent) and embeds a Google Map.
 
 ### API integration: GitHub repository activity
@@ -259,7 +261,7 @@ The About page shows the latest commits from `GET https://api.github.com/repos/{
 
 ### Automated
 
-`tests/tests.html` is a self-contained page with its own small runner. It loads only `store.js` and `agent-sim.js`, and every test runs against a **fake in-memory storage** passed in with `store._useStorage()`, so the tests never change a visitor's saved tasks (loading `store.js` still seeds real storage on a first visit, as any page does). **Current result: `PASS 23/23`.**
+`tests/tests.html` is a self-contained page with its own small runner. It loads only `store.js` and `agent-sim.js`, and every test runs against a **fake in-memory storage** passed in with `store._useStorage()`, so the tests never change a visitor's saved tasks (loading `store.js` still seeds real storage on a first visit, as any page does). **Current result: `PASS 26/26`.**
 
 | Group | Tests | What is checked |
 |---|---|---|
@@ -267,6 +269,7 @@ The About page shows the latest commits from `GET https://api.github.com/repos/{
 | Storage edge cases | 3 | first-visit seeding; corrupt JSON and blocked storage fall back to memory |
 | `applyView` | 4 | search, the Pending filter, combined filters, the three sorts |
 | `escapeHtml` | 1 | an `<img onerror>` payload is neutralised |
+| Usage simulation | 3 | To do uses nothing and In progress less than Completed; the same task always gives the same numbers and only its agent's tools; totals add up over agents and over tools |
 | Agent simulation | 4 | To do → In progress → Completed; abandons if deleted or moved; refuses tasks that aren't To do |
 
 ### Manual
@@ -277,39 +280,59 @@ A checklist to run on every page before submitting:
 - **Keyboard only:** skip link, visible focus, N and /, the Kanban menu, tooltips, the carousel pause and the Contact modal.
 - **`file://`, storage blocked and reduced motion:** the site still works in each case.
 
-## Lighthouse audit (to be completed by the student)
+## Lighthouse audit
 
-> **To do:** run the audit and fill in this section yourself.
-
-How to run it: open each page in Chrome, open DevTools (F12), go to the **Lighthouse** tab, select the Performance, Accessibility, Best Practices and SEO categories, and click **Analyze page load**. Do this once in **Mobile** mode and once in **Desktop** mode for every page.
+Run on 2 November 2026 with the Lighthouse 12.8.2 command-line tool in Chrome, against the site served locally (`python3 -m http.server` on port 8000). Every run starts from an empty profile, so each page shows the demo tasks. Mobile scores varied from run to run on the same laptop, so each page was audited **three times on mobile** and the table shows the median run (the three Performance scores are in brackets). Desktop is a single run. The full reports are in `docs/lighthouse/reports/`.
 
 | Page | Mode | Performance | Accessibility | Best Practices | SEO |
 |---|---|---|---|---|---|
-| Home | Mobile | | | | |
-| Home | Desktop | | | | |
-| Tasks | Mobile | | | | |
-| Tasks | Desktop | | | | |
-| Analytics | Mobile | | | | |
-| Analytics | Desktop | | | | |
-| Agents | Mobile | | | | |
-| Agents | Desktop | | | | |
-| About | Mobile | | | | |
-| About | Desktop | | | | |
-| Contact | Mobile | | | | |
-| Contact | Desktop | | | | |
+| Home | Mobile | 90 (89 / 90 / 91) | 100 | 100 | 100 |
+| Home | Desktop | 100 | 100 | 100 | 100 |
+| Tasks | Mobile | 90 (86 / 90 / 91) | 100 | 100 | 100 |
+| Tasks | Desktop | 93 | 100 | 100 | 100 |
+| Analytics | Mobile | 93 (91 / 93 / 94) | 100 | 100 | 100 |
+| Analytics | Desktop | 100 | 100 | 100 | 100 |
+| Agents | Mobile | 91 (91 / 91 / 91) | 100 | 100 | 100 |
+| Agents | Desktop | 100 | 100 | 100 | 100 |
+| About | Mobile | 83 (82 / 83 / 84) | 100 | 100 | 100 |
+| About | Desktop | 100 | 100 | 100 | 100 |
+| Contact | Mobile | 94 (93 / 94 / 96) | 100 | 100 | 100 |
+| Contact | Desktop | 100 | 100 | 100 | 100 |
 
-Screenshots: save one per page as `docs/lighthouse/<page>.png` (for example `docs/lighthouse/tasks.png`) and link them here.
+The screenshots show each page's median mobile run:
 
-_Reflect on the scores and what you changed because of them._
+| | |
+|---|---|
+| ![Lighthouse mobile report for Home](docs/lighthouse/index.png) | ![Lighthouse mobile report for Tasks](docs/lighthouse/tasks.png) |
+| Home | Tasks |
+| ![Lighthouse mobile report for Analytics](docs/lighthouse/analytics.png) | ![Lighthouse mobile report for Agents](docs/lighthouse/agents.png) |
+| Analytics | Agents |
+| ![Lighthouse mobile report for About](docs/lighthouse/about.png) | ![Lighthouse mobile report for Contact](docs/lighthouse/contact.png) |
+| About | Contact |
 
-## Personal reflections (to be written by the student)
+### What the audit showed
 
-> **To do:** answer these in your own words.
+- **Accessibility, Best Practices and SEO are 100 on every page**, in both modes.
+- **Desktop is 93 to 100.** Tasks is the lowest at 93: in its single desktop run a few requests finished late (Speed Index 2.8 s), while its first and largest paint were both at 0.6 s.
+- **Mobile is slower to first paint (about 2.5–2.8 s).** Lighthouse's mobile mode simulates a mid-range phone on a slow 4G connection, and every page waits for Bootstrap's CSS and the Google Font from their CDNs before anything is drawn. Lighthouse estimates 1 to 2 s could be saved on these render-blocking requests.
+- **About is the lowest on mobile (83).** Its largest element, the intro paragraph, is drawn about 1.2 s after the first paint (LCP 3.8–4.0 s).
+- **"Use efficient cache lifetimes" is flagged everywhere** because Python's test server sends no caching headers. That is a hosting setting, not something in the site's code.
 
-- What was the hardest part of the project, and how did you get past it?
-- If you started again, what would you do differently?
-- What did you learn about Bootstrap, especially about customising it through its CSS variables instead of overriding its classes?
-- What did you learn about JavaScript, for example about keeping one source of truth and redrawing from it?
+## Personal reflections
+
+> For the personal reflections part, I wrote up four questions that effectively represent the main prompt.
+
+**Q**: What was the hardest part of the project, and how did you get past it?
+**A**: The overall project was quite easy to approach. I knew I would follow a pure-HTML/CSS/Js approach (vanilla JavaScript, no jQuery) to ensure high speeds and accessibility. Most of my past work has been centered around the "wow-factor", making websites or features that delight visitors. Thus, I would say the most difficult part was settling for a barebones minimalist style. On the technical aspect, there was some confusion in regards to the theming (Dark/White modes), but a quick look-up to Bootstrap's colour-mode docs (the `data-bs-theme` attribute) resolved it.
+
+**Q**: If you started again, what would you do differently?
+**A**: Nothing. My consistent practice the past five years has prepared me for most scenarios. Although I still find myself looking up how to center a div, the overall architecture and approach are quite known to me. The lack of backend for the midterm project was admittedly the most relieving part, as 99% of my past issues arise from the connection of client-server (and Hydration... as my go-to framework is Next.js).
+
+**Q**: What did you learn about Bootstrap, especially about customising it through its CSS variables instead of overriding its classes?
+**A**: I had never worked with Bootstrap before. However, the variable customizability closely resembles React/Next.js setups,  with which I am familiar. I would not personally choose Bootstrap over Tailwind CSS or shadcn/ui as both offer much more powerful foundations (this could be quite a biased statement). However, it was an enjoyable experience working through and understanding the functionalities of Bootstrap, as it is arguably one of the greatest UI kits out there.
+
+**Q**: What did you learn about JavaScript?
+**A**: The most interesting aspect of the project was handling the localStorage and tasks functionality. Taskit.store saves all tasks in one place. Any change to a task goes to the store, where taskit:change fires each page's render() to rebuilt the view from the store's data. I have worked with similar architectures through Next.js and server components, but this was one of the few times I have developed a Javascript process like that.
 
 ## Credits
 
@@ -318,4 +341,3 @@ _Reflect on the scores and what you changed because of them._
 - [Heroicons v2.1.5](https://heroicons.com/) (MIT licence), path data copied into `js/layout.js`.
 - [GitHub REST API](https://docs.github.com/en/rest) for the commit feed on the About page.
 - Google Maps embed for the office map on the Contact page.
-- The agents are named after figures from Ancient Greece: Athena, Hermes, Pythagoras and Hephaestus.
