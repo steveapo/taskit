@@ -4,11 +4,12 @@
  * Working or Idle, a Bootstrap progress bar of completed vs assigned tasks, and the
  * skills as a Bootstrap list group, each with a Bootstrap tooltip that explains it.
  * Those three components (progress, list group, tooltip) are used on this page only.
+ * Each panel also shows the agent's simulated usage (tokens, cost, calls per tool).
  */
 (function (Taskit) {
   'use strict';
 
-  const { store, icon } = Taskit;
+  const { store, icon, ui } = Taskit;
   const esc = store.escapeHtml;
   const grid = document.getElementById('agent-grid');
 
@@ -45,7 +46,26 @@
       </li>`;
   }
 
-  function panelHtml(agent, s) {
+  // Simulated usage: three totals, then one bar per tool showing its share of the agent's
+  // tool calls. The bars are role="img", so their aria-label carries the same numbers.
+  function usageHtml(agent, u) {
+    const name = esc(agent.name);
+    const tools = agent.tools.map(t => [t, u.tools[t]]);
+    const spoken = `${name} tool calls: ` + tools.map(([t, n]) => `${t} ${n}`).join(', ');
+    return `<p class="usage-head">Usage, simulated</p>
+      <dl class="usage-stats">
+        <div><dt class="label">Tokens</dt><dd class="mono">${ui.formatTokens(u.tokens)}</dd></div>
+        <div><dt class="label">Cost</dt><dd class="mono">${ui.formatCost(u.cost)}</dd></div>
+        <div><dt class="label">Tool calls</dt><dd class="mono">${u.calls}</dd></div>
+      </dl>
+      <div class="hbars hbars-tools" role="img" aria-label="${spoken}">${ui.hbarRowsHtml(tools.map(([t, n]) => ({
+        label: `<span class="mono">${esc(t)}</span>`,
+        pct: ui.percent(n, u.calls),
+        value: `<span class="mono">${n}</span>`,
+      })))}</div>`;
+  }
+
+  function panelHtml(agent, s, u) {
     const id = esc(agent.id);
     const name = esc(agent.name);
     // "2 of 3 completed · 67%" above the bar; the same facts in words for screen readers.
@@ -66,6 +86,7 @@
                aria-valuenow="${s.percent}" aria-valuemin="0" aria-valuemax="100" aria-valuetext="${spoken}">
             <div class="progress-bar" style="width: ${s.percent}%"></div>
           </div>
+          ${usageHtml(agent, u)}
           <div class="stage stage-compact">
             <div class="fragment">
               <p class="picker-head mb-0">Skills</p>
@@ -84,7 +105,8 @@
       if (tip) tip.dispose();
     });
     const tasks = store.getTasks();
-    grid.innerHTML = store.AGENTS.map(agent => panelHtml(agent, statsFor(agent.id, tasks))).join('');
+    const { byAgent } = store.usage(tasks);
+    grid.innerHTML = store.AGENTS.map(agent => panelHtml(agent, statsFor(agent.id, tasks), byAgent[agent.id])).join('');
     // Bootstrap tooltips are opt-in, so each one has to be created in JS.
     grid.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
   }

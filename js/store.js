@@ -13,9 +13,12 @@
   const PRIORITIES = ['high', 'medium', 'low'];
 
   // The four simulated agents. Fixed in code: users assign tasks to them but can't edit them.
+  // `skills` are what an agent is good at (for people); `tools` are what it calls while it
+  // works, which the simulated usage below counts.
   const AGENTS = [
     {
       id: 'athena', name: 'Athena', role: 'Research & planning', icon: 'light-bulb',
+      tools: ['web_search', 'read_page', 'take_notes'],
       skills: [
         { name: 'Web research', tip: 'Finds, reads and cites reliable sources' },
         { name: 'Planning', tip: 'Breaks big goals into clear steps' },
@@ -24,6 +27,7 @@
     },
     {
       id: 'hermes', name: 'Hermes', role: 'Writing & communication', icon: 'envelope',
+      tools: ['draft_text', 'check_grammar', 'translate'],
       skills: [
         { name: 'Copywriting', tip: 'Drafts emails, posts and documentation' },
         { name: 'Editing', tip: 'Fixes tone, grammar and clarity' },
@@ -32,6 +36,7 @@
     },
     {
       id: 'pythagoras', name: 'Pythagoras', role: 'Data & analysis', icon: 'calculator',
+      tools: ['run_query', 'run_python', 'make_chart'],
       skills: [
         { name: 'Data cleaning', tip: 'Tidies messy spreadsheets' },
         { name: 'Statistics', tip: 'Spots trends and outliers' },
@@ -40,6 +45,7 @@
     },
     {
       id: 'hephaestus', name: 'Hephaestus', role: 'Code & building', icon: 'wrench-screwdriver',
+      tools: ['read_file', 'edit_file', 'run_tests'],
       skills: [
         { name: 'Coding', tip: 'Writes HTML, CSS and JavaScript' },
         { name: 'Debugging', tip: 'Tracks down and fixes bugs' },
@@ -224,6 +230,71 @@
     return c;
   }
 
+  /* ---------- simulated usage (pure) ---------- */
+
+  // The agents are a simulation, so their usage is too. Every number below is worked out
+  // from the task itself each time it's needed, so nothing extra is saved. The same task
+  // always gives the same numbers, and they grow as the task moves: To do uses nothing,
+  // In progress half, Completed all of it.
+  // Known limit: usage lives on the tasks, so deleting a task removes its usage; store a usage
+  // log if spent tokens should outlive deleted tasks.
+
+  // Demo prices in US dollars per million tokens. Input is what the agent reads, output
+  // what it writes, and writing costs more.
+  const RATES = { input: 3, output: 15 };
+  const SHARE = { todo: 0, 'in-progress': 0.5, done: 1 };
+  const USAGE_KEYS = ['input', 'output', 'tokens', 'cost', 'calls'];
+
+  // FNV-1a: turns a string into a 32-bit number. A small change in the string gives a very
+  // different number, so it works as a repeatable "random" number for a task.
+  function hash(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0; // >>> 0 reads it as a positive number
+  }
+
+  // One task's usage: tokens in and out, the cost, and the calls to each of its agent's tools.
+  function taskUsage(task) {
+    const share = SHARE[task.status] || 0;
+    // A whole number from min to max, fixed for this task and this `key`, then scaled by share.
+    const pick = (key, min, max) => Math.round(share * (min + hash(task.id + key) % (max - min + 1)));
+    const agent = agentById(task.agentId);
+    const tools = {};
+    (agent ? agent.tools : []).forEach(name => { tools[name] = pick(name, 1, 12); });
+    const input = pick('input', 8000, 40000);
+    const output = pick('output', 1500, 8000);
+    return {
+      input, output, tokens: input + output,
+      cost: (input * RATES.input + output * RATES.output) / 1e6,
+      calls: Object.values(tools).reduce((sum, n) => sum + n, 0),
+      tools,
+    };
+  }
+
+  // Usage added up three ways: in total, per agent (with its tools), and per tool.
+  function usage(list = tasks) {
+    const empty = () => ({ input: 0, output: 0, tokens: 0, cost: 0, calls: 0 });
+    const add = (into, u) => USAGE_KEYS.forEach(k => { into[k] += u[k]; });
+    const total = empty();
+    const byAgent = {};
+    const byTool = {};
+    AGENTS.forEach(a => {
+      byAgent[a.id] = { ...empty(), tools: {} };
+      a.tools.forEach(name => { byAgent[a.id].tools[name] = 0; byTool[name] = 0; });
+    });
+    list.forEach(t => {
+      const u = taskUsage(t);
+      add(total, u);
+      if (!byAgent[t.agentId]) return; // a task saved with an unknown agent counts only in the total
+      add(byAgent[t.agentId], u);
+      Object.entries(u.tools).forEach(([name, n]) => { byAgent[t.agentId].tools[name] += n; byTool[name] += n; });
+    });
+    return { total, byAgent, byTool };
+  }
+
   /* ---------- search / filter / sort (pure) ---------- */
 
   const SORTS = {
@@ -251,7 +322,7 @@
   Taskit.store = {
     AGENTS, STATUSES, PRIORITIES, agentById,
     getTasks, getTask, addTask, updateTask, deleteTask, setStatus,
-    getActivity, counts, applyView, escapeHtml,
+    getActivity, counts, applyView, escapeHtml, taskUsage, usage,
     get persistent() { return persistent; },
     _useStorage: useStorage,
   };

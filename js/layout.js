@@ -1,8 +1,8 @@
 /*
  * layout.js — shared page chrome for every Taskit page.
  * Loaded in <head> so the saved colour theme is applied before the first paint
- * (no white flash in dark mode). On DOMContentLoaded it injects the one header and
- * footer every page shares, so nav links live in exactly one place.
+ * (no white flash in dark mode). As soon as the page is parsed it injects the one header
+ * and footer every page shares, so nav links live in exactly one place.
  * Also hosts the icon helper (Taskit.icon), the validation helpers used by every form on
  * the site (checks, error links, reset), and the small observer that fades sections in
  * as they scroll into view (.reveal).
@@ -48,6 +48,7 @@
     'envelope': 'M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75',
     'information-circle': 'm11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z',
     'light-bulb': 'M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18',
+    'list-bullet': 'M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z',
     'magnifying-glass': 'm21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z',
     'map-pin': 'M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z',
     'moon': 'M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z',
@@ -58,6 +59,7 @@
     'plus': 'M12 4.5v15m7.5-7.5h-15',
     'sun': 'M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z',
     'trash': 'm14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0',
+    'view-columns': 'M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z',
     'wrench-screwdriver': 'M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z',
     'x-mark': 'M6 18 18 6M6 6l12 12',
   };
@@ -314,7 +316,12 @@
     if (e.target.matches && e.target.matches(TEXT_FIELDS)) checkText(e.target);
   });
 
-  document.addEventListener('DOMContentLoaded', () => {
+  // 'interactive' means the HTML is parsed. It comes before deferred scripts and
+  // DOMContentLoaded, so on a page that holds its first frame for its deferred scripts
+  // (Tasks), the header is in before anything is drawn, instead of arriving afterwards and
+  // pushing the page down (a layout shift).
+  document.addEventListener('readystatechange', () => {
+    if (document.readyState !== 'interactive') return;
     const header = document.getElementById('site-header');
     const footer = document.getElementById('site-footer');
     if (header) {
@@ -327,10 +334,15 @@
     }
     applyTheme(document.documentElement.getAttribute('data-bs-theme')); // sync the new button's icon
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-    initMenuDismiss();
     fillStaticIcons(); // after the header/footer are in, so it also covers anything they hold
-    if (Taskit.store && !Taskit.store.persistent) showStorageWarning();
     initReveal();
+  });
+
+  // These need scripts that may be deferred (the store, Bootstrap's JS); deferred scripts
+  // have all run by DOMContentLoaded.
+  document.addEventListener('DOMContentLoaded', () => {
+    initMenuDismiss();
+    if (Taskit.store && !Taskit.store.persistent) showStorageWarning();
   });
 
   Taskit.icon = icon;

@@ -333,12 +333,20 @@ b, strong { font-weight: 500; }
 .site-header .navbar-toggler[aria-expanded="true"] .icon:first-child { display: none; }
 .site-header .navbar-toggler[aria-expanded="true"] .icon:last-child { display: inline-block; }
 
-/* Phones and tablets (below Bootstrap's lg breakpoint): the menu moves into thumb reach.
+/* Collapsed menu on any device: right-aligned. The 2rem theme button centres a 1rem icon, so
+   pull it right by the .5rem gap to line the icon up with the end of the link text above it. */
+@media (max-width: 991.98px) {
+  .site-header .theme-toggle { margin-right: -.5rem; }
+}
+
+/* Touch devices only (pointer: coarse means the main input is a finger): the menu moves into
+   thumb reach. A laptop with a narrow window has a mouse or trackpad (pointer: fine), so it
+   skips this block and keeps Bootstrap's normal top-right button, which opens downwards.
    The button becomes a round pill fixed to the bottom-right corner, and the menu is a
    panel fixed just above it. The panel's bottom edge is pinned, so when Bootstrap grows
    its height from 0 it opens upwards. env(safe-area-inset-bottom) keeps both clear of
    the iPhone home bar. */
-@media (max-width: 991.98px) {
+@media (max-width: 991.98px) and (pointer: coarse) {
   .site-header .navbar-toggler {
     position: fixed;
     right: 1rem;
@@ -367,9 +375,6 @@ b, strong { font-weight: 500; }
     border: 1px solid color-mix(in oklch, var(--tk-muted) 50%, transparent);
     border-radius: var(--tk-radius-lg);
   }
-  /* The menu is right-aligned. The 2rem theme button centres a 1rem icon, so pull it right
-     by the .5rem gap to line the icon up with the end of the link text above it. */
-  .site-header .theme-toggle { margin-right: -.5rem; }
   /* Room under the footer so the floating button never covers its last line. */
   .site-footer { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
 }
@@ -609,15 +614,18 @@ b, strong { font-weight: 500; }
   border-radius: 4px;
 }
 
-/* Tile strip: four equal tiles. Two columns by default (a 2×2 grid) and one row of four
-   on wide screens, so the four agents never split 3 + 1. */
+/* Tile strip: four equal tiles. One column on phones (each tile holds a skills list, too
+   cramped at half a phone's width), a 2×2 grid from 576px and one row of four on wide
+   screens, so the four agents never split 3 + 1. */
 .tile-strip {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .5rem;
   margin: 0;
   padding: 0;
+}
+@media (min-width: 576px) { /* Bootstrap's sm breakpoint */
+  .tile-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 992px) { /* Bootstrap's lg breakpoint */
   .tile-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -634,6 +642,28 @@ b, strong { font-weight: 500; }
   border: 1px solid var(--tk-border);
   border-radius: var(--tk-radius-lg);
 }
+/* The agent's line illustration on top of the tile, in a fixed square. Each SVG has a
+   square canvas with padding chosen so all four look the same size and line weight. */
+.tile-art { width: 6rem; height: 6rem; margin-bottom: .5rem; }
+/* The SVGs are dark ink on nothing. In dark mode, invert flips the ink to light and
+   hue-rotate turns the inverted accent back to a light turquoise (same trick as the map). */
+[data-bs-theme="dark"] .tile-art { filter: invert(1) hue-rotate(180deg); }
+/* The skills stage fills the rest of the tile, so the four stages line up at the bottom.
+   The list sits at the top (a stage centres by default), so the four lists start on the
+   same line. Text goes back to the left: only the name and role above it are centred. */
+.tile .stage {
+  align-self: stretch;
+  flex-grow: 1;
+  place-items: start center;
+  margin-top: 1rem;
+  padding: .75rem;
+  text-align: left;
+}
+/* Skill rows: the name, the tip muted under it, hairlines between rows. */
+.skill-rows { list-style: none; margin: 0; padding: 0; }
+.skill-rows li { display: grid; gap: .125rem; padding: .5rem; }
+.skill-rows li + li { border-top: 1px solid var(--tk-border); }
+.skill-tip { font-size: .75rem; color: var(--tk-muted); }
 
 /* Stage fragments: the small pieces of UI that sit on a stage. */
 .fragment {
@@ -853,12 +883,37 @@ b, strong { font-weight: 500; }
   font: inherit;
 }
 .search-field:focus-within .kbd { display: none; }
+/* List / Board switch: one pill split in two, pushed to the end of the toolbar. The current
+   view is filled with the surface colour, in the text colour and medium weight (like the
+   current nav link), so it isn't marked by colour alone. */
+.view-switch {
+  display: inline-flex;
+  margin-left: auto;
+  padding: 2px;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-pill);
+}
+.view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  height: calc(2rem - 6px); /* 2px padding + 1px border, top and bottom: as tall as a .pill */
+  padding: 0 .75rem;
+  font-size: .8125rem;
+  color: var(--tk-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--tk-pill);
+}
+.view-btn:hover { color: var(--tk-text); }
+.view-btn[aria-pressed="true"] { color: var(--tk-text); font-weight: 500; background-color: var(--tk-surface); }
 /* Phones: iPhones zoom the whole page into any field whose text is under 16px, so the
    fields go up to 16px there (the pills grow a little to fit). */
 @media (max-width: 767.98px) {
   .pill,
   .composer-detail { font-size: 1rem; }
   .pill { height: 2.25rem; }
+  .view-btn { height: calc(2.25rem - 6px); }
 }
 
 /* Task table: Bootstrap's own table, re-coloured through its variables. Rows are split by
@@ -932,9 +987,12 @@ b, strong { font-weight: 500; }
 .hbar:first-child { border-top: 0; }
 .hbar-track { height: 6px; overflow: hidden; border-radius: 3px; background-color: var(--tk-border); }
 .hbar-fill { display: block; height: 100%; border-radius: 3px; } /* width is set inline by analytics.js */
-.hbar-fill.is-done { background-color: var(--tk-text); }
+.hbar-fill.is-done,
+.hbar-fill.is-usage { background-color: var(--tk-text); }  /* usage bars: the Agents and Analytics usage charts */
 .hbar-fill.is-pending { background-color: var(--tk-muted); }
 .hbar-value { display: flex; justify-content: flex-end; gap: .75rem; font-size: .875rem; }
+/* Usage by agent: the value column holds tokens and cost ("48.2K $0.31"), so it is wider. */
+.hbars-cost .hbar { grid-template-columns: 6.5rem minmax(0, 1fr) 7.5rem; }
 
 /* By priority: one bar split into rounded segments with 2px gaps. analytics.js sets each
    segment's flex-grow to its count, so the widths follow the counts. */
@@ -1022,6 +1080,7 @@ b, strong { font-weight: 500; }
 .board-card-meta > span + span::before { content: "·"; margin-right: .375rem; }
 .board-card-meta .prio { gap: .375rem; }
 .board-empty { margin: 0; padding: .5rem; font-size: .8125rem; color: var(--tk-muted); }
+.board-caption { margin: .75rem 0 0; font-size: .8125rem; color: var(--tk-muted); } /* same as the table caption */
 /* Ghost pill (the card's move menu): no border until you point at it. */
 .pill-ghost { height: 1.75rem; margin-left: -.5rem; padding: 0 .5rem; border-color: transparent; }
 .pill-ghost .pill-select { color: var(--tk-muted); }
@@ -1066,6 +1125,14 @@ b, strong { font-weight: 500; }
 /* Skill name on the left, the info button on the right. */
 .skill-list .list-group-item { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .agent-link { margin-top: 1.25rem; }
+/* Simulated usage under the progress bar: a small muted heading, three totals side by
+   side (label over number, like a small stat strip) and one bar per tool. */
+.usage-head { margin: 1.5rem 0 .5rem; font-size: .75rem; color: var(--tk-muted); }
+.usage-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; }
+.usage-stats dd { margin: .125rem 0 0; font-size: 1.125rem; }
+/* Tool bars: a wider first column for names like "check_grammar", a narrow one for the count. */
+.hbars-tools { margin-top: .75rem; }
+.hbars-tools .hbar { grid-template-columns: 7.5rem minmax(0, 1fr) 2rem; padding: .5rem 0; font-size: .8125rem; }
 
 /* ---------- 7. Motion ---------- */
 /* Only opacity and transform move (cheap for the browser), and all of it switches off
@@ -1144,6 +1211,18 @@ b, strong { font-weight: 500; }
 }
 /* The current slide's bar is text colour AND longer, so colour isn't the only difference. */
 .testimonials.carousel .carousel-indicators .active { width: 24px; background-color: var(--tk-text); }
+/* Fade out, then fade in. Bootstrap's carousel-fade keeps the old slide fully visible
+   while the new one fades in on top. That works for photos, but these quotes have no
+   background, so the two texts showed through each other. Here the old quote fades out
+   over .3s and the new one waits those .3s before fading in. Bootstrap times the slide
+   change from the old slide's transition, so it finishes after the fade-out.
+   Only with motion allowed: under "reduce motion" Bootstrap swaps the slides instantly. */
+@media (prefers-reduced-motion: no-preference) {
+  .testimonials.carousel-fade .active.carousel-item-start,
+  .testimonials.carousel-fade .active.carousel-item-end { transition: opacity .3s ease-in; }
+  .testimonials.carousel-fade .carousel-item-next.carousel-item-start,
+  .testimonials.carousel-fade .carousel-item-prev.carousel-item-end { transition: opacity .3s ease-out .3s; }
+}
 
 /* GitHub commits: each row is a link to the commit on github.com, in the text colour
    (not accent) with a muted arrow at the end. Pointing at it underlines the message. */

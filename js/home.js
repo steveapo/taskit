@@ -11,7 +11,7 @@
 
   const { store, sim } = Taskit;
   const { icon, activity, ui } = Taskit;
-  const { agentName, COLUMNS } = ui; // shared with the Tasks and Analytics pages
+  const { agentName, COLUMNS } = ui; // shared with the Tasks page and its board
   const esc = store.escapeHtml;
   const timeAgo = activity.timeAgo; // "5 minutes ago", shared with the Tasks page feed
 
@@ -185,9 +185,25 @@
     }).join('');
   }
 
+  // Each tile: the agent's line illustration (img/agent-<id>.svg), its name, its role, then
+  // its skills on a stage. alt="" because the name right below already says who it is.
+  // The skills box looks like the one on the Agents page but is built from plain rows: the
+  // Bootstrap list group and tooltips stay unique to that page (it's the page of choice).
+  // The tip is written out under each skill instead of hiding in a tooltip.
   function renderAgentTiles() {
     document.getElementById('agent-tiles').innerHTML = store.AGENTS.map(a =>
-      `<li class="tile"><span>${esc(a.name)}</span><span class="small text-body-secondary">${esc(a.role)}</span></li>`
+      `<li class="tile">
+        <img class="tile-art" src="img/agent-${esc(a.id)}.svg" alt="" width="96" height="96">
+        <span>${esc(a.name)}</span><span class="small text-body-secondary">${esc(a.role)}</span>
+        <div class="stage stage-compact">
+          <div class="fragment">
+            <p class="picker-head mb-0">Skills</p>
+            <ul class="skill-rows">${a.skills.map(s => `
+              <li><span>${esc(s.name)}</span><span class="skill-tip">${esc(s.tip)}</span></li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      </li>`
     ).join('');
   }
 

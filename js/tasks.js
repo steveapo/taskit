@@ -1,18 +1,24 @@
 /*
  * tasks.js — Tasks page: the composer (add/edit form), the task table, the summary counts,
- * the search/filter/sort toolbar, the N and / keyboard shortcuts, and the "Latest activity"
- * feed under the table (drawn by js/activity.js).
- * The table is never edited directly: every action goes through Taskit.store, whose
- * `taskit:change` event triggers render(), so the table and counts always match the data.
+ * the search/filter/sort toolbar, the List / Board switch (the board itself is drawn by
+ * js/kanban.js), the N and / keyboard shortcuts, and the "Latest activity" feed under the
+ * tasks (drawn by js/activity.js).
+ * The table and board are never edited directly: every action goes through Taskit.store,
+ * whose `taskit:change` event triggers render(), so both always match the data.
  */
 (function (Taskit) {
   'use strict';
 
-  const { store, layout, sim, icon, ui } = Taskit;
+  const { store, layout, sim, icon, ui, kanban } = Taskit;
   const esc = store.escapeHtml;
   const $ = id => document.getElementById(id);
 
   const form = $('task-form');
+  // The due date starts at today. In an empty date field Safari shows today's date as a
+  // grey hint that looks like a real value, so typing only the day and month left the
+  // field empty and the form said "Pick a due date". A real starting value avoids that.
+  // defaultValue is what form.reset() puts back, so every new task starts at today too.
+  $('task-due').defaultValue = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local time
   // The toolbar's starting state. "Clear the filters" puts every control back to this.
   const DEFAULT_VIEW = { search: '', status: 'all', priority: 'all', agentId: 'all', sort: 'due-asc' };
   // Current toolbar state, passed straight to store.applyView().
@@ -75,8 +81,12 @@
     const all = store.getTasks();
     const shown = store.applyView(all, view);
     ui.renderCounts(store.counts());
-    $('table-caption').textContent = `Showing ${shown.length} of ${all.length} tasks`;
+    const caption = `Showing ${shown.length} of ${all.length} tasks`;
+    $('table-caption').textContent = caption;
+    $('board-caption').textContent = caption;
     $('task-rows').innerHTML = shown.length ? shown.map(rowHtml).join('') : emptyRowHtml(all.length > 0);
+    // Both views are drawn every time (a handful of tasks costs nothing), so switching is instant.
+    kanban.render($('board'), shown);
     // Remember which tasks are Completed now, so a check only draws once, when it changes.
     // (All tasks, not just the shown ones, so clearing a filter doesn't redraw old checks.)
     doneBefore = new Set(all.filter(t => t.status === 'done').map(t => t.id));
@@ -163,6 +173,30 @@
     $('search').focus();
   }
 
+  /* ---------- List / Board switch ---------- */
+
+  // The chosen view is remembered in localStorage, like the theme. A link to
+  // tasks.html#board (the Home page has one) opens the board whatever was saved.
+  const VIEW_KEY = 'taskit.view';
+
+  function showView(name) {
+    document.querySelectorAll('.view-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+    $('list-view').hidden = name !== 'list';
+    $('board-view').hidden = name !== 'board';
+  }
+
+  document.querySelector('.view-switch').addEventListener('click', e => {
+    const button = e.target.closest('.view-btn');
+    if (!button) return;
+    showView(button.dataset.view);
+    try { localStorage.setItem(VIEW_KEY, button.dataset.view); } catch (err) { /* not remembered, but still switches */ }
+  });
+
+  function startView() {
+    if (location.hash === '#board') return 'board';
+    try { return localStorage.getItem(VIEW_KEY) === 'board' ? 'board' : 'list'; } catch (err) { return 'list'; }
+  }
+
   /* ---------- row actions (one delegated listener for the whole table) ---------- */
 
   const actions = {
@@ -214,6 +248,8 @@
   /* ---------- start ---------- */
 
   fillAgentSelects();
+  kanban.init($('board'));
+  showView(startView());
   document.addEventListener('taskit:change', e => {
     // A new task's row flashes once: mark it for this render only.
     newTaskId = e.detail && e.detail.type === 'added' ? e.detail.id : null;

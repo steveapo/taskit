@@ -1,6 +1,7 @@
 /*
- * ui.js — small presentation helpers shared by the Home, Tasks and Analytics pages and
- * the activity feed, so each status icon, priority dot, date and agent name is written once.
+ * ui.js — small presentation helpers shared by the Home, Tasks, Analytics and Agents pages
+ * and the activity feed, so each status icon, priority dot, date, agent name and usage
+ * number is written once.
  * The functions only build HTML strings (or plain text); they never touch the store's data.
  * Anything that came from the store is escaped before it goes into the HTML.
  * Load it right after js/store.js.
@@ -81,5 +82,29 @@
     document.getElementById('count-done').textContent = c.done;
   }
 
-  Taskit.ui = { COLUMNS, PRIORITIES, shortDate, dueHtml, agentName, statusIcon, statusHtml, priorityHtml, renderCounts };
+  // Simulated usage numbers: tokens as "48.2K" (compact), cost as "$0.31".
+  const TOKENS = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+  const COST = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatTokens = n => TOKENS.format(n);
+  const formatCost = n => COST.format(n);
+
+  // Whole-number share of the total, e.g. 2 of 6 → 33. Zero when the total is zero.
+  const percent = (n, total) => (total ? Math.round((n / total) * 100) : 0);
+
+  // Rows for an .hbars chart: label | thin track filled to `pct`% | value. Used by the usage
+  // charts on the Agents and Analytics pages. `label` and `value` are HTML the caller has
+  // already escaped.
+  function hbarRowsHtml(rows) {
+    return rows.map(r => `
+      <div class="hbar">
+        ${r.label}
+        <span class="hbar-track"><span class="hbar-fill is-usage" style="width: ${r.pct}%"></span></span>
+        <span class="hbar-value">${r.value}</span>
+      </div>`).join('');
+  }
+
+  Taskit.ui = {
+    COLUMNS, PRIORITIES, shortDate, dueHtml, agentName, statusIcon, statusHtml, priorityHtml, renderCounts,
+    formatTokens, formatCost, percent, hbarRowsHtml,
+  };
 })(window.Taskit);
