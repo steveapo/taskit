@@ -1,21 +1,19 @@
 /*
- * analytics.js — Analytics page: the summary counts, two charts and the Kanban board.
+ * analytics.js — Analytics page: the summary counts, two charts and the simulated usage
+ * (tokens, cost, tool calls). The Kanban board lives on the Tasks page (js/kanban.js).
  * The charts need no library: each bar is a <span> whose width is a percentage, and the
- * priority bar is a row of segments whose flex-grow is their count. Moving a card
- * (drag-and-drop or the "Move to" menu) just calls store.setStatus(), and the
+ * priority bar is a row of segments whose flex-grow is their count. The
  * `taskit:change` event redraws everything.
  */
 (function (Taskit) {
   'use strict';
 
   const { store, icon, ui } = Taskit;
-  const { COLUMNS, PRIORITIES } = ui; // [value, word] pairs, e.g. ['done', 'Completed']
+  const { PRIORITIES } = ui; // [value, word] pairs, e.g. ['high', 'High']
   const esc = store.escapeHtml;
   const $ = id => document.getElementById(id);
-  const board = $('board');
 
-  // Whole-number share of the total, e.g. 2 of 6 → 33. Zero when there are no tasks.
-  const percent = (n, total) => (total ? Math.round((n / total) * 100) : 0);
+  const { percent } = ui; // whole-number share of a total, e.g. 2 of 6 → 33
 
   /* ---------- charts (the counts above them come from ui.renderCounts) ---------- */
 
@@ -56,93 +54,42 @@
       : '<li class="legend-empty">No tasks yet. <a class="link-arrow" href="tasks.html">Add one ' + icon('arrow-right') + '</a></li>';
   }
 
-  /* ---------- Kanban ---------- */
+  /* ---------- usage (simulated, from store.usage) ---------- */
 
-  // The keyboard and touch alternative to dragging: a small ghost select in each card.
-  function moveSelectHtml(t, id) {
-    const options = COLUMNS
-      .map(([status, label]) => `<option value="${status}"${status === t.status ? ' selected' : ''}>${label}</option>`).join('');
-    return `<div class="pill pill-ghost">
-        <label class="visually-hidden" for="move-${id}">Move “${esc(t.name)}” to</label>
-        <select class="pill-select" id="move-${id}" data-move="${id}">${options}</select>
-        ${icon('chevron-down', 'pill-chevron')}
-      </div>`;
+  // The three totals, then two bar charts: tokens per agent (with the cost next to it) and
+  // calls per tool, most used first. Each bar is a share of the total it belongs to.
+  function renderUsage() {
+    const { total, byAgent, byTool } = store.usage();
+    $('usage-tokens').textContent = ui.formatTokens(total.tokens);
+    $('usage-cost').textContent = ui.formatCost(total.cost);
+    $('usage-calls').textContent = total.calls;
+
+    const agents = $('usage-agents');
+    agents.innerHTML = ui.hbarRowsHtml(store.AGENTS.map(a => ({
+      label: `<span class="label">${esc(a.name)}</span>`,
+      pct: percent(byAgent[a.id].tokens, total.tokens),
+      value: `<span class="mono">${ui.formatTokens(byAgent[a.id].tokens)}</span>` +
+             `<span class="mono text-body-secondary">${ui.formatCost(byAgent[a.id].cost)}</span>`,
+    })));
+    agents.setAttribute('aria-label', 'Tokens by agent: ' + store.AGENTS.map(a =>
+      `${a.name} ${ui.formatTokens(byAgent[a.id].tokens)} tokens, ${ui.formatCost(byAgent[a.id].cost)}`).join('; '));
+
+    const tools = Object.entries(byTool).sort((a, b) => b[1] - a[1]);
+    const toolChart = $('usage-tools');
+    toolChart.innerHTML = ui.hbarRowsHtml(tools.map(([name, n]) => ({
+      label: `<span class="mono">${esc(name)}</span>`,
+      pct: percent(n, total.calls),
+      value: `<span class="mono">${n}</span>`,
+    })));
+    toolChart.setAttribute('aria-label', 'Calls per tool: ' + tools.map(([name, n]) => `${name} ${n}`).join(', '));
   }
-
-  // One card: name (with the pulsing dot while an agent works on it), then
-  // "Athena · 20 Oct · ● High", then the move menu. The hidden words make the meta
-  // line read "due 20 Oct" and "High priority" to screen readers.
-  function cardHtml(t) {
-    const id = esc(t.id);
-    const working = t.status === 'in-progress' ? '<span class="dot-working" aria-hidden="true"></span>' : '';
-    return `<article class="board-card${t.status === 'done' ? ' is-done' : ''}" draggable="true" data-id="${id}">
-        <h4 class="board-card-title">${working}<span>${esc(t.name)}</span></h4>
-        <p class="board-card-meta">
-          <span>${esc(ui.agentName(t.agentId, 'Unassigned'))}</span>
-          <span><span class="visually-hidden">due </span>${ui.dueHtml(t.dueDate)}</span>
-          <span>${ui.priorityHtml(t.priority)}<span class="visually-hidden"> priority</span></span>
-        </p>
-        ${moveSelectHtml(t, id)}
-      </article>`;
-  }
-
-  // Three columns. Each column is also the drop target (data-status says which status it means).
-  function renderBoard() {
-    const tasks = store.getTasks();
-    board.innerHTML = COLUMNS.map(([status, label]) => {
-      const cards = tasks.filter(t => t.status === status);
-      return `<section class="board-col" data-status="${status}" aria-label="${label} column">
-          <h3 class="board-head"><span>${label}</span><span class="mono text-body-secondary">${cards.length}</span></h3>
-          ${cards.map(cardHtml).join('') || '<p class="board-empty">Nothing here.</p>'}
-        </section>`;
-    }).join('');
-  }
-
-  // All drag-and-drop listeners sit on the board itself, so re-rendering the cards never loses them.
-  board.addEventListener('dragstart', e => {
-    const card = e.target.closest('.board-card');
-    if (!card) return;
-    e.dataTransfer.setData('text/plain', card.dataset.id);
-    e.dataTransfer.effectAllowed = 'move';
-    card.classList.add('dragging');
-  });
-  board.addEventListener('dragend', e => {
-    const card = e.target.closest('.board-card');
-    if (card) card.classList.remove('dragging');
-  });
-  board.addEventListener('dragover', e => {
-    const col = e.target.closest('.board-col');
-    if (!col) return;
-    e.preventDefault(); // allows the drop
-    col.classList.add('drag-over');
-  });
-  board.addEventListener('dragleave', e => {
-    const col = e.target.closest('.board-col');
-    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
-  });
-  board.addEventListener('drop', e => {
-    const col = e.target.closest('.board-col');
-    if (!col) return;
-    e.preventDefault();
-    col.classList.remove('drag-over');
-    store.setStatus(e.dataTransfer.getData('text/plain'), col.dataset.status);
-  });
-
-  // Keyboard and touch alternative to dragging.
-  board.addEventListener('change', e => {
-    const id = e.target.dataset.move;
-    if (!id) return;
-    store.setStatus(id, e.target.value);
-    const moved = document.getElementById('move-' + id); // the board re-rendered: put focus back on the same card
-    if (moved) moved.focus();
-  });
 
   function render() {
     const c = store.counts();
     ui.renderCounts(c);
     renderBars(c);
     renderPriority(c);
-    renderBoard();
+    renderUsage();
   }
 
   document.addEventListener('taskit:change', render);

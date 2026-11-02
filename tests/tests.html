@@ -204,6 +204,38 @@
       eq(store.escapeHtml('<img src=x onerror="alert(1)">&\''), '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;&amp;&#39;');
     });
 
+    /* ---------- simulated usage (pure) ---------- */
+    const job = (id, status, agentId = 'athena') => ({ id, status, agentId });
+
+    test('taskUsage: To do uses nothing, In progress less than Completed', () => {
+      const todo = store.taskUsage(job('a', 'todo'));
+      eq([todo.tokens, todo.cost, todo.calls], [0, 0, 0]);
+      const half = store.taskUsage(job('a', 'in-progress'));
+      const full = store.taskUsage(job('a', 'done'));
+      ok(half.tokens > 0 && half.tokens < full.tokens, 'in progress should use some, but less than done');
+      ok(full.input >= 8000 && full.input <= 40000, 'input tokens in range');
+      ok(full.output >= 1500 && full.output <= 8000, 'output tokens in range');
+    });
+
+    test('taskUsage: the same task always gives the same numbers, only its agent\'s tools', () => {
+      eq(store.taskUsage(job('x1', 'done', 'hermes')), store.taskUsage(job('x1', 'done', 'hermes')));
+      const u = store.taskUsage(job('x1', 'done', 'hermes'));
+      eq(Object.keys(u.tools), store.agentById('hermes').tools);
+      eq(u.calls, Object.values(u.tools).reduce((a, b) => a + b, 0));
+      eq(u.cost, (u.input * 3 + u.output * 15) / 1e6, 'cost at $3 / $15 per million tokens');
+    });
+
+    test('usage: totals equal the sum over agents and over tools', () => {
+      const list = [job('1', 'done', 'athena'), job('2', 'in-progress', 'hermes'), job('3', 'done', 'hephaestus'), job('4', 'todo', 'pythagoras')];
+      const { total, byAgent, byTool } = store.usage(list);
+      const agents = Object.values(byAgent);
+      eq(total.tokens, agents.reduce((s, a) => s + a.tokens, 0));
+      eq(total.calls, agents.reduce((s, a) => s + a.calls, 0));
+      eq(total.calls, Object.values(byTool).reduce((s, n) => s + n, 0));
+      eq(byAgent.pythagoras.tokens, 0, 'a To do task adds nothing');
+      eq(store.usage([]).total.tokens, 0);
+    });
+
     /* ---------- agent simulation ---------- */
     test('sim.run walks a task todo → in-progress → done and logs both steps', async () => {
       fresh();
