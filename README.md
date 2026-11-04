@@ -323,6 +323,7 @@ The screenshots show each page's median mobile run:
 > For the personal reflections part, I wrote up four questions that effectively represent the main prompt.
 
 **Q**: What was the hardest part of the project, and how did you get past it?
+
 **A**: The overall project was quite easy to approach. I knew I would follow a pure-HTML/CSS/Js approach (vanilla JavaScript, no jQuery) to ensure high speeds and accessibility. Most of my past work has been centered around the "wow-factor", making websites or features that delight visitors. Thus, I would say the most difficult part was settling for a barebones minimalist style. On the technical aspect, there was some confusion in regards to the theming (Dark/White modes), but a quick look-up to Bootstrap's colour-mode docs (the `data-bs-theme` attribute) resolved it.
 
 Two parts of the app were trickier than they first looked. The first was the Kanban board: drag-and-drop works nicely with a mouse, but keyboard and most touch users simply can't drag. I decided to give every card a "Move to" menu as well, and since every change redraws the whole board, the drag listeners had to sit on the board itself rather than on the cards (and the focus had to go back to the card's menu after each redraw, otherwise keyboard users would lose their place).
@@ -330,12 +331,15 @@ Two parts of the app were trickier than they first looked. The first was the Kan
 The second came up during the Lighthouse audit, where the Tasks page scored 66 on mobile because of a huge layout shift. Claude traced it through Lighthouse's own traces and found that the browser was drawing the page before the scripts had filled in the table and the header, so everything jumped down once they did. Loading the scripts in the `<head>` with `defer` and `blocking="render"`, and adding the header as soon as the HTML is parsed, fixed it (re-running the audits confirmed it), and the same fix later applied to the Home and Analytics pages.
 
 **Q**: If you started again, what would you do differently?
+
 **A**: Nothing. My consistent practice the past five years has prepared me for most scenarios. Although I still find myself looking up how to center a div, the overall architecture and approach are quite known to me. The lack of backend for the midterm project was admittedly the most relieving part, as 99% of my past issues arise from the connection of client-server (and Hydration... as my go-to framework is Next.js).
 
 **Q**: What did you learn about Bootstrap, especially about customising it through its CSS variables instead of overriding its classes?
+
 **A**: I had never worked with Bootstrap before. However, the variable customizability closely resembles React/Next.js setups,  with which I am familiar. I would not personally choose Bootstrap over Tailwind CSS or shadcn/ui as both offer much more powerful foundations (this could be quite a biased statement). However, it was an enjoyable experience working through and understanding the functionalities of Bootstrap, as it is arguably one of the greatest UI kits out there.
 
 **Q**: What did you learn about JavaScript?
+
 **A**: The most interesting aspect of the project was handling the localStorage and tasks functionality. Taskit.store saves all tasks in one place. Any change to a task goes to the store, where taskit:change fires each page's render() to rebuilt the view from the store's data. I have worked with similar architectures through Next.js and server components, but this was one of the few times I have developed a Javascript process like that.
 
 ## Credits
