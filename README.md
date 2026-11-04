@@ -342,6 +342,12 @@ The second came up during the Lighthouse audit, where the Tasks page scored 66 o
 
 **A**: The most interesting aspect of the project was handling the localStorage and tasks functionality. Taskit.store saves all tasks in one place. Any change to a task goes to the store, where taskit:change fires each page's render() to rebuilt the view from the store's data. I have worked with similar architectures through Next.js and server components, but this was one of the few times I have developed a Javascript process like that.
 
+## Important Notice on Commits
+
+The project began on October 23rd locally, with a local git setup. A misconfiguration on my end required clearing out the old repo (whilst also forgetting to backup commits, although am still quite unsure whether it would be possible to transfer them) and reinitialise it on October 27. Then, on October 28 I linked it to GitHub and started committing the changes as close to the original order as possible; thus most commits landed on Oct 28. 
+
+Multiple edit iterations also occurred on October 28. This is a 100% mistake on my end, therefore any point losses are welcomed for this part.
+
 ## Credits
 
 - [Bootstrap 5.3.3](https://getbootstrap.com/) (MIT licence), loaded from the jsDelivr CDN with Subresource Integrity hashes.
